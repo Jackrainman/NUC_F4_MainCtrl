@@ -14,7 +14,7 @@
 #include "../Utils/my_math/my_math.h"
 #define RADIUM_CTRL               1 /* 这个宏打开的时候右手遥感y轴可以控制半径的选择 */
 
-#define MAIN_CTRL_MIN_RADIUM_KEY  4  /* 自动跑环按键 */
+#define MAIN_CTRL_MIN_RADIUM_KEY  18  /* 自动跑环按键，暂时不用 */
 #define MAIN_CTRL_RIGHT_POINT_KEY 18 /* 右侧自动装球跑点 */
 #define MAIN_CTRL_LEFT_POINT_KEY  17 /* 左侧自动装球跑点 */
 #define MAIN_CTRL_SMALL_LOOP_KEY  5  /* 切换小环按键 */
