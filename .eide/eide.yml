@@ -1,0 +1,281 @@
+version: "4.1"
+name: F4-MainCtrl
+type: ARM
+deviceName: STM32F429IGTx
+packDir: .pack/Keil/STM32F4xx_DFP.2.14.0
+srcDirs: []
+virtualFolder:
+  name: <virtual_root>
+  files: []
+  folders:
+    - name: Bsp
+      files:
+        - path: Drivers/Bsp/core/bsp_core.c
+        - path: Drivers/Bsp/core/core_delay.c
+        - path: Drivers/Bsp/core/retarget_io.c
+        - path: Drivers/Bsp/key/key.c
+        - path: Drivers/Bsp/led/led.c
+        - path: Drivers/Bsp/bsp.c
+        - path: Drivers/Bsp/cylinder/cylinder.c
+        - path: Drivers/Bsp/npn_switch/npn_switch.c
+        - path: Drivers/Bsp/beep/beep.c
+        - path: Drivers/Bsp/can_list/can_list.c
+        - path: Drivers/Bsp/DJI-Motor/dji_bldc_motor.c
+      folders: []
+    - name: Application
+      files:
+        - path: User/Application/Src/main.c
+        - path: User/Application/Src/stm32f4xx_it.c
+        - path: User/Application/Src/rtos_tasks.c
+        - path: User/Application/Src/sub_pub.c
+        - path: User/Application/Src/chassis.c
+        - path: User/Application/Src/main_ctrl.c
+        - path: User/Application/Src/dribble.c
+        - path: User/Application/Src/shoot.c
+        - path: User/Application/Src/remote_report.c
+      folders: []
+    - name: Drivers
+      files: []
+      folders:
+        - name: HAL_Driver
+          files:
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_cortex.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_dma.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_flash.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_gpio.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_rcc.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_uart.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_i2c.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_adc.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_can.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_crc.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_cryp.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_cryp_ex.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_dac.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_dac_ex.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_eth.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_exti.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_i2c_ex.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_iwdg.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_pwr.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_rtc.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_rtc_ex.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_sram.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_tim.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_usart.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_wwdg.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_ll_fmc.c
+            - path: Drivers/STM32_HAL_Driver/Src/stm32f4xx_hal_spi.c
+          folders: []
+        - name: CMSIS
+          files:
+            - path: Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c
+          folders:
+            - name: Startup
+              files:
+                - path: Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/arm/startup_stm32f429xx.s
+              folders: []
+            - name: Dsp
+              files:
+                - path: Drivers/CMSIS/Dsp/Source/BasicMathFunctions/BasicMathFunctions.c
+                - path: Drivers/CMSIS/Dsp/Source/CommonTables/CommonTables.c
+                - path: Drivers/CMSIS/Dsp/Source/ControllerFunctions/ControllerFunctions.c
+                - path: Drivers/CMSIS/Dsp/Source/FastMathFunctions/FastMathFunctions.c
+                - path: Drivers/CMSIS/Dsp/Source/SupportFunctions/SupportFunctions.c
+              folders: []
+        - name: CSP
+          files:
+            - path: Drivers/CSP/UART_STM32F4xx.c
+            - path: Drivers/CSP/CAN_STM32F4xx.c
+            - path: Drivers/CSP/ETH_STM32F4xx.c
+            - path: Drivers/CSP/I2C_STM32F4xx.c
+            - path: Drivers/CSP/RTC_STM32F4xx.c
+            - path: Drivers/CSP/SPI_STM32F4xx.c
+          folders: []
+    - name: Middlewares
+      files: []
+      folders:
+        - name: FreeRTOS
+          files: []
+          folders:
+            - name: Core
+              files:
+                - path: Middlewares/FreeRTOS/croutine.c
+                - path: Middlewares/FreeRTOS/event_groups.c
+                - path: Middlewares/FreeRTOS/list.c
+                - path: Middlewares/FreeRTOS/queue.c
+                - path: Middlewares/FreeRTOS/stream_buffer.c
+                - path: Middlewares/FreeRTOS/tasks.c
+                - path: Middlewares/FreeRTOS/timers.c
+              folders: []
+            - name: Portable
+              files:
+                - path: Middlewares/FreeRTOS/portable/MemMang/heap_4.c
+                - path: Middlewares/FreeRTOS/portable/GCC/ARM_CM4F/port.c
+              folders: []
+    - name: Docs
+      files: []
+      folders: []
+    - name: Utils
+      files:
+        - path: User/Utils/ring_fifo/ring_fifo.c
+        - path: User/Utils/my_math/my_math.c
+        - path: User/Utils/pid/pid.c
+      folders: []
+    - name: Modules
+      files:
+        - path: User/Modules/logger/logger.c
+        - path: User/Modules/message-protocol/msg_protocol.c
+        - path: User/Modules/remote_ctrl/remote_ctrl.c
+        - path: User/Modules/action_position/action_position.c
+        - path: User/Modules/odometry_string/odometry_string.c
+        - path: User/Modules/go_path/go_path.c
+      folders: []
+    - name: SEEGER
+      files: []
+      folders:
+        - name: RTT
+          files:
+            - path: SEGGER/RTT/SEGGER_RTT.c
+            - path: SEGGER/RTT/SEGGER_RTT_printf.c
+          folders: []
+        - name: SystemView
+          files:
+            - path: SEGGER/SystemView/SEGGER_RTT_ASM_ARMv7M.S
+            - path: SEGGER/SystemView/SEGGER_SYSVIEW.c
+            - path: SEGGER/SystemView/SEGGER_SYSVIEW_FreeRTOS.c
+            - path: SEGGER/SystemView/Config/SEGGER_SYSVIEW_Config_FreeRTOS.c
+          folders: []
+dependenceList: []
+outDir: build
+miscInfo:
+  uid: 06dd416474c8cafd24678823b59f3d5b
+targets:
+  Debug:
+    cppPreprocessAttrs:
+      defineList:
+        - USE_HAL_DRIVER
+        - DEBUG
+        - STM32F429xx
+      incList:
+        - .
+        - Drivers/CMSIS/Core/Include
+        - Drivers/STM32_HAL_Driver/Inc
+        - Drivers/CMSIS/Device/ST/STM32F4xx/Include
+        - Drivers/CSP/Config
+        - Drivers/Bsp
+        - User/Application/Inc
+        - User/Utils
+        - Middlewares/FreeRTOS/include
+        - Middlewares/FreeRTOS/portable/GCC/ARM_CM4F
+        - User/Modules
+        - Drivers/CMSIS/Dsp/Include
+        - Drivers/CMSIS/Dsp/PrivateInclude
+        - SEGGER/RTT
+      libList: []
+    excludeList:
+      - <virtual_root>/Drivers/CSP/ETH_STM32F4xx.c
+      - <virtual_root>/Drivers/CSP/I2C_STM32F4xx.c
+      - <virtual_root>/Drivers/CSP/RTC_STM32F4xx.c
+      - <virtual_root>/Drivers/CSP/SPI_STM32F4xx.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_adc_ex.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_adc.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_crc.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_cryp_ex.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_cryp.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_dac_ex.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_dac.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_eth.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_exti.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_i2c_ex.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_i2c.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_i2s_ex.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_iwdg.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_rtc_ex.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_rtc.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_sram.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_tim_ex.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_tim.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_usart.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_wwdg.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_ll_fmc.c
+      - <virtual_root>/Drivers/HAL_Driver/stm32f4xx_hal_spi.c
+      - <virtual_root>/SEEGER/SystemView
+      - <virtual_root>/Modules/odometry_string.c
+    toolchain: AC6
+    toolchainConfigMap:
+      AC6:
+        archExtensions: ""
+        cpuType: Cortex-M4
+        floatingPointHardware: single
+        options:
+          version: 3
+          afterBuildTasks: []
+          asm-compiler:
+            $use: asm-auto
+          beforeBuildTasks: []
+          c/cpp-compiler:
+            CXX_FLAGS: -Wno-padded -Wno-unsafe-buffer-usage -Wno-reserved-identifier -Wno-missing-noreturn -Wno-covered-switch-default -Wno-switch-enum -Wno-missing-prototypes -Wno-newline-eof -Wno-gnu-pointer-arith -Wno-declaration-after-statement -Wno-sign-conversion -Wno-implicit-int-conversion -Wno-double-promotion -Wno-missing-field-initializers -Wno-self-assign -Wno-extra-semi-stmt -Wno-missing-variable-declarations -Wno-cast-align -Wno-implicit-float-conversion -Wno-missing-braces -Wno-cast-qual -Wno-format-nonliteral -Wno-gnu-binary-literal
+            C_FLAGS: -Wno-padded -Wno-unsafe-buffer-usage -Wno-reserved-identifier -Wno-missing-noreturn -Wno-covered-switch-default -Wno-switch-enum -Wno-missing-prototypes -Wno-newline-eof -Wno-gnu-pointer-arith -Wno-declaration-after-statement -Wno-sign-conversion -Wno-implicit-int-conversion -Wno-double-promotion -Wno-missing-field-initializers -Wno-self-assign -Wno-extra-semi-stmt -Wno-missing-variable-declarations -Wno-cast-align -Wno-implicit-float-conversion -Wno-missing-braces -Wno-cast-qual -Wno-format-nonliteral -Wno-gnu-binary-literal
+            language-c: c11
+            language-cpp: c++11
+            link-time-optimization: true
+            one-elf-section-per-function: true
+            optimization: level-0
+            short-enums#wchar: true
+            warnings: all-warnings
+          global:
+            output-debug-info: enable
+            use-microLIB: true
+          linker:
+            misc-controls: --diag_suppress=L6329
+            output-format: elf
+        scatterFilePath: <YOUR_SCATTER_FILE>.sct
+        storageLayout:
+          RAM:
+            - id: 1
+              isChecked: true
+              mem:
+                size: "0x00030000"
+                startAddr: "0x20000000"
+              noInit: false
+              tag: IRAM
+            - id: 2
+              isChecked: true
+              mem:
+                size: "0x00010000"
+                startAddr: "0x10000000"
+              noInit: false
+              tag: IRAM
+          ROM:
+            - id: 1
+              isChecked: true
+              isStartup: true
+              mem:
+                size: "0x00100000"
+                startAddr: "0x08000000"
+              tag: IROM
+        useCustomScatterFile: false
+    uploadConfigMap:
+      JLink:
+        baseAddr: ""
+        bin: ""
+        cpuInfo:
+          cpuName: STM32F429VE
+          vendor: ST
+        otherCmds: ""
+        proType: 1
+        speed: 8000
+      OpenOCD:
+        baseAddr: "0x08000000"
+        bin: ""
+        interface: cmsis-dap
+        target: stm32f4x
+    uploader: OpenOCD

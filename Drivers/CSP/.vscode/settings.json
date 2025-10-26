@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "*.s": "arm",
+        "*.cpp": "cpp",
+        "can_stm32f4xx.h": "c",
+        "i2c_stm32f4xx.h": "c",
+        "spi_stm32f4xx.h": "c",
+        "usart_stm32f4xx.h": "c",
+        "uart_stm32f4xx.h": "c",
+        "csp_config.h": "c"
+    }
+}
