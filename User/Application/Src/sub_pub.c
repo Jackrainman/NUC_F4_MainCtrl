@@ -25,13 +25,13 @@
 #include "logger/logger.h"
 #include "my_math/my_math.h"
 
-#define ACT_POS_USART_HANDLE &uart5_handle
-#define NUC_UART_HANDLE      &usart6_handle
+#define ACT_POS_USART_HANDLE &usart6_handle
+#define NUC_UART_HANDLE      &uart5_handle
 #define REMOTE_UART_HANDLE   &uart4_handle
 
 TaskHandle_t sub_pub_task_handle;
 TaskHandle_t msg_polling_task_handle;
-TaskHandle_t action_position_recv_task_handle;
+TaskHandle_t action_position_recv_task_handle;  // 现在用不上
 
 float *world_yaw; /* 指向全场定位的坐标 */
 
@@ -47,7 +47,7 @@ static struct __packed {
     uint8_t shoot_flag;        /* 射击标志 */
 } pub_to_slave_data;
 
-// nuc_pos_data_t g_nuc_pos_data;
+nuc_pos_data_t g_nuc_pos_data;
 
 /**
  * @brief 订阅底盘速度

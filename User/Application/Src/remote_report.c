@@ -82,9 +82,9 @@ void remote_report_task(void *pvParameters) {
         switch (report_data) {
             case REMOTE_REPORT_POSITION: {
                 /* 更新位置信息 */
-                report_chassis.x = (int16_t)g_action_pos_data.x;
-                report_chassis.y = (int16_t)g_action_pos_data.y;
-                report_chassis.yaw = (int16_t)g_action_pos_data.yaw;
+                report_chassis.x = (int16_t)g_nuc_pos_data.x;
+                report_chassis.y = (int16_t)g_nuc_pos_data.y;
+                report_chassis.yaw = (int16_t)g_nuc_pos_data.yaw;
                 // report_chassis.x = (int16_t)(HAL_GetTick()/8);
                 // report_chassis.y = (int16_t)(HAL_GetTick()/2);
                 // report_chassis.yaw = (int16_t)(HAL_GetTick()/100);
