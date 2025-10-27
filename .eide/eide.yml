@@ -134,9 +134,9 @@ virtualFolder:
         - path: User/Modules/logger/logger.c
         - path: User/Modules/message-protocol/msg_protocol.c
         - path: User/Modules/remote_ctrl/remote_ctrl.c
-        - path: User/Modules/action_position/action_position.c
         - path: User/Modules/odometry_string/odometry_string.c
         - path: User/Modules/go_path/go_path.c
+        - path: User/Modules/action_position/action_position.c
       folders: []
     - name: SEEGER
       files: []

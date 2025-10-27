@@ -46,9 +46,6 @@ void start_task(void *pvParameters) {
     xTaskCreate(remote_report_task, "remote_report_task", 256, NULL, 3,
                 &remote_report_task_handle);
 
-    /* 创建后台任务 */
-    xTaskCreate(sub_pub_task, "sub_pub_task", 256, NULL, 4,
-                &sub_pub_task_handle);
     xTaskCreate(msg_polling_task, "msg_polling_task", 256, NULL, 4,
                 &msg_polling_task_handle);
 
@@ -65,7 +62,10 @@ void start_task(void *pvParameters) {
 
     /* 创建led流水灯任务(偶尔可以检测板子任务正不正常) */
     xTaskCreate(task1, "task1", 128, NULL, 2, &task1_handle);
-
+    /* 创建后台任务 */
+    xTaskCreate(sub_pub_task, "sub_pub_task", 256, NULL, 4,
+                &sub_pub_task_handle);
+    
     vTaskDelete(start_task_handle);
     taskEXIT_CRITICAL();
 }
@@ -81,7 +81,6 @@ void task1(void *pvParameters) {
 
     while (1) {
         LED0_TOGGLE(); /* LED0闪烁 */
-        LED3_TOGGLE(); /* LED3闪烁 */
 
         vTaskDelay(1000);
     }

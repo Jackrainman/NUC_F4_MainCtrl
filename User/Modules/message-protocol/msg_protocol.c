@@ -251,6 +251,7 @@ void message_send_data(msg_id_t msg_id, msg_type_t data_type, uint8_t *data,
             /* 转义 */
             send_buf[buf_idx] = MSG_ESC;
             ++buf_idx;
+            
         }
 #endif /* MSG_ESC */
 

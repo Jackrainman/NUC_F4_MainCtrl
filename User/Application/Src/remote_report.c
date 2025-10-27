@@ -21,7 +21,7 @@ static struct __packed {
     int16_t yaw;               /*!< yaw 坐标 */
     uint8_t point_index;          /*!< 目标点序列号 */
 
-    /*!< 底盘状态 
+    /*!< 底盘状态
      * bit[7:3] 保留
      * bit[2]   是否自锁
      * bit[1]   是否在自瞄状态
@@ -37,7 +37,7 @@ static struct __packed {
     remote_report_data_t type; /*!< 上报的数据类型: 位置 */
     float shoot_spd;           /*!< 发射速度 */
 
-    /*!< 发射状态 
+    /*!< 发射状态
      * bit[7:2] 保留
      * bit[1]   2006是否推出
      * bit[0]   是否在发射状态
@@ -66,8 +66,8 @@ QueueHandle_t remote_report_data_queue;
 
 /**
  * @brief 上报数据任务, 需要给`remote_report_data_queue`发数据才会上报
- * 
- * @param pvParameters 
+ *
+ * @param pvParameters
  */
 void remote_report_task(void *pvParameters) {
     UNUSED(pvParameters);
@@ -82,9 +82,9 @@ void remote_report_task(void *pvParameters) {
         switch (report_data) {
             case REMOTE_REPORT_POSITION: {
                 /* 更新位置信息 */
-                report_chassis.x = (int16_t)g_nuc_pos_data.x;
-                report_chassis.y = (int16_t)g_nuc_pos_data.y;
-                report_chassis.yaw = (int16_t)g_nuc_pos_data.yaw;
+                report_chassis.x = (int16_t)g_action_pos_data.x;
+                report_chassis.y = (int16_t)g_action_pos_data.y;
+                report_chassis.yaw = (int16_t)g_action_pos_data.yaw;
                 // report_chassis.x = (int16_t)(HAL_GetTick()/8);
                 // report_chassis.y = (int16_t)(HAL_GetTick()/2);
                 // report_chassis.yaw = (int16_t)(HAL_GetTick()/100);

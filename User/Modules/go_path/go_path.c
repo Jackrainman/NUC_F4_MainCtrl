@@ -189,7 +189,12 @@ static void action_pid_control(go_path_point_type_t point_type) {
     /* 运动状态更新 */
     if (arrive_xy && arrive_yaw) {
         go_path_result.arrived = GO_PATH_TARGET_ARRIVE;
-    } else {
+    } 
+    else if(arrive_xy)
+    {
+        go_path_result.arrived = GO_PATH_TARGET_ARRIVE_XY_NOT_YAW;
+    }    
+    else {
         go_path_result.arrived = GO_PATH_TARGET_NO_ARRIVE;
     }
 }
@@ -210,36 +215,360 @@ void dt35_pid_control(go_path_point_type_t point_type) {}
  * @param point_type 目标点的类型
  * @return 底盘跑点状态
  */
+// go_path_arrive_status_t go_path_by_point(float target_x, float target_y,
+//                                          float target_yaw,
+//                                          go_path_point_type_t point_type) {
+//     if (point_type >= POINT_TYPE_NUM) {
+//         /* 超域 */
+//         return GO_PATH_TARGET_POINT_TYPE_ERR;
+//     }
+//     float speedx = 0.0f, speedy = 0.0f, speedw = 0.0f;
+
+//     go_path_state[point_type].target_x = target_x;
+//     go_path_state[point_type].target_y = target_y;
+//     go_path_state[point_type].target_yaw = target_yaw;
+//     switch (go_path_state[point_type].location_type) {
+//         case LOCATION_TYPE_ACTION:
+//             action_pid_control(point_type);
+//             break;
+//         case LOCATION_TYPE_DT35:
+//             dt35_pid_control(point_type);
+//             break;
+//         case LOCATION_TYPE_NUC:
+//             action_pid_control(point_type);
+//             break;
+//         default:
+//             break;
+//     }
+//     speedx = go_path_result.moving_velocity * cosf(go_path_result.speed_angle);
+//     speedy = go_path_result.moving_velocity * sinf(go_path_result.speed_angle);
+//     speedw = go_path_result.turning_velocity;
+
+//     go_path_chassis_ctrl(speedx, speedy, speedw);
+
+//     return go_path_result.arrived;
+// }
+
+//修改go_path_by_point函数以支持直线跑点
+
 go_path_arrive_status_t go_path_by_point(float target_x, float target_y,
-                                         float target_yaw,
-                                         go_path_point_type_t point_type) {
+                                        float target_yaw,
+                                        go_path_point_type_t point_type) {
     if (point_type >= POINT_TYPE_NUM) {
         /* 超域 */
         return GO_PATH_TARGET_POINT_TYPE_ERR;
     }
     float speedx = 0.0f, speedy = 0.0f, speedw = 0.0f;
-
+    float last_speedx = 10000.0f, last_speedy = 10000.0f, last_speedw = 10000.0f;
+    
     go_path_state[point_type].target_x = target_x;
     go_path_state[point_type].target_y = target_y;
     go_path_state[point_type].target_yaw = target_yaw;
-    switch (go_path_state[point_type].location_type) {
-        case LOCATION_TYPE_ACTION:
-            action_pid_control(point_type);
-            break;
-        case LOCATION_TYPE_DT35:
-            dt35_pid_control(point_type);
-            break;
-        case LOCATION_TYPE_NUC:
-            action_pid_control(point_type);
-            break;
-        default:
-            break;
+    
+    // 根据点位类型选择控制方式
+    if (point_type == POINT_TYPE_LINEAR) {
+        // 对于直线跑点，使用专用的控制函数
+        linear_pid_control(point_type);
+    } else if (point_type == POINT_TYPE_X_Y_YAW_SEQUENCE) {
+        // 对于顺序跑点，使用顺序控制函数
+        x_y_yaw_sequence_control(point_type);
+    } else {
+        // 对于其他类型，使用原来的控制逻辑
+        switch (go_path_state[point_type].location_type) {
+            case LOCATION_TYPE_ACTION:
+                action_pid_control(point_type);
+                break;
+            case LOCATION_TYPE_DT35:
+                dt35_pid_control(point_type);
+                break;
+            case LOCATION_TYPE_NUC:
+                action_pid_control(point_type);
+                break;
+            default:
+                break;
+        }
     }
+ 
+    
     speedx = go_path_result.moving_velocity * cosf(go_path_result.speed_angle);
     speedy = go_path_result.moving_velocity * sinf(go_path_result.speed_angle);
     speedw = go_path_result.turning_velocity;
+    //speedx = speedy = 0;
+    
+    if(speedw > 20) speedw += 240;
+    if(speedw < -20) speedw -= 240;
+    // if(last_speedw - speedw < 3 && last_speedw - speedw > -3 ) speedw = 0;
+    // if(last_speedy - speedy < 20 && last_speedy - speedy > -20 ) speedy = 0;
+    // if(last_speedx - speedx < 20 && last_speedx - speedx > -20 ) speedx = 0;
+    switch (go_path_result.arrived)
+    {
+    case GO_PATH_TARGET_NO_ARRIVE:
+        speedw = 0;
+        break;
+    case GO_PATH_TARGET_ARRIVE_XY_NOT_YAW:
+        speedx = speedy = 0;
+        break;
+    default:
+        break;
+    }
 
+    // last_speedx = speedx;
+    // last_speedy = speedy;
+    // last_speedw = speedw;
     go_path_chassis_ctrl(speedx, speedy, speedw);
-
+    
     return go_path_result.arrived;
+}
+
+/**
+ * @brief 直线跑点控制函数
+ * 
+ * @param point_type 点位类型
+ */
+// static void linear_pid_control(go_path_point_type_t point_type) {
+//     bool arrive_xy = false;  /*!< 到达目标点坐标标志位 */
+//     bool arrive_yaw = false; /*!< 到达目标点角度标志位 */
+    
+//     /* 平动速度解算 */
+//     float delta_distance = two_dimensions(
+//         *go_path_state[point_type].chassis_position.chassis_x,
+//         *go_path_state[point_type].chassis_position.chassis_y,
+//         go_path_state[point_type].target_x, go_path_state[point_type].target_y);
+    
+//     if (delta_distance > go_path_state[point_type].distance_deadband) {
+//         // 计算移动方向角
+//         if ((go_path_state[point_type].target_y - 
+//              *go_path_state[point_type].chassis_position.chassis_y) > 0) {
+//             go_path_result.speed_angle = 
+//                 acosf((go_path_state[point_type].target_x - 
+//                        *go_path_state[point_type].chassis_position.chassis_x) / 
+//                       delta_distance);
+//         } else {
+//             go_path_result.speed_angle = 
+//                 -acosf((go_path_state[point_type].target_x - 
+//                         *go_path_state[point_type].chassis_position.chassis_x) / 
+//                        delta_distance);
+//         }
+        
+//         // 计算平动速度
+//         go_path_result.moving_velocity = 
+//             pid_calc(go_path_state[point_type].running_pid[SPEED_PID], 
+//                      delta_distance, 0);
+        
+//         arrive_xy = false;
+        
+//         // 直线跑点的关键：强制底盘朝向与移动方向一致
+//         float target_yaw = RAD2DEG(go_path_result.speed_angle);
+//         float delta_angle = 
+//             angle_trans(*go_path_state[point_type].chassis_position.chassis_yaw, 
+//                         target_yaw);
+        
+//         if (math_compare_float(my_fabs(delta_angle), 
+//                                go_path_state[point_type].angle_deadband) == 
+//             MATH_FP_MORETHAN) {
+//             go_path_result.turning_velocity = 
+//                 pid_calc(go_path_state[point_type].running_pid[ANGLE_PID], 
+//                          delta_angle, 0);
+//             arrive_yaw = false;
+//         } else {
+//             go_path_result.turning_velocity = 0.0f;
+//             go_path_state[point_type].running_pid[ANGLE_PID]->iout = 0;
+//             arrive_yaw = true;
+//         }
+//     } else {
+//         go_path_result.moving_velocity = 0.0f;
+//         go_path_result.speed_angle = 0.0f;
+//         go_path_state[point_type].running_pid[SPEED_PID]->iout = 0;
+//         arrive_xy = true;
+        
+//         // 到达位置后，调整到目标角度
+//         float delta_angle = 
+//             angle_trans(*go_path_state[point_type].chassis_position.chassis_yaw, 
+//                         go_path_state[point_type].target_yaw);
+        
+//         if (math_compare_float(my_fabs(delta_angle), 
+//                                go_path_state[point_type].angle_deadband) == 
+//             MATH_FP_MORETHAN) {
+//             go_path_result.turning_velocity = 
+//                 pid_calc(go_path_state[point_type].running_pid[ANGLE_PID], 
+//                          delta_angle, 0);
+//             arrive_yaw = false;
+//         } else {
+//             go_path_result.turning_velocity = 0.0f;
+//             go_path_state[point_type].running_pid[ANGLE_PID]->iout = 0;
+//             arrive_yaw = true;
+//         }
+//     }
+    
+//     /* 运动状态更新 */
+//     if (arrive_xy && arrive_yaw) {
+//         go_path_result.arrived = GO_PATH_TARGET_ARRIVE;
+//     } else {
+//         go_path_result.arrived = GO_PATH_TARGET_NO_ARRIVE;
+//     }
+// }
+
+static void linear_pid_control(go_path_point_type_t point_type) {
+    bool arrive_xy = false;  /*!< 到达目标点坐标标志位 */
+    bool arrive_yaw = false; /*!< 到达目标点角度标志位 */
+    
+    /* 平动速度解算 */
+    float delta_distance = two_dimensions(
+        *go_path_state[point_type].chassis_position.chassis_x,
+        *go_path_state[point_type].chassis_position.chassis_y,
+        go_path_state[point_type].target_x, go_path_state[point_type].target_y);
+    
+    if (delta_distance > go_path_state[point_type].distance_deadband) {
+        // 计算移动方向角
+        if ((go_path_state[point_type].target_y - 
+             *go_path_state[point_type].chassis_position.chassis_y) > 0) {
+            go_path_result.speed_angle = 
+                acosf((go_path_state[point_type].target_x - 
+                       *go_path_state[point_type].chassis_position.chassis_x) / 
+                      delta_distance);
+        } else {
+            go_path_result.speed_angle = 
+                -acosf((go_path_state[point_type].target_x - 
+                        *go_path_state[point_type].chassis_position.chassis_x) / 
+                       delta_distance);
+        }
+        
+        // 计算平动速度
+        go_path_result.moving_velocity = 
+            pid_calc(go_path_state[point_type].running_pid[SPEED_PID], 
+                     delta_distance, 0);
+        
+        arrive_xy = false;
+        
+        // 关键修改：在移动过程中，强制底盘朝向与移动方向一致
+        // 这样可以确保机器人直线移动，不提前调整最终yaw角
+        float target_yaw = RAD2DEG(go_path_result.speed_angle);
+        float delta_angle = 
+            angle_trans(*go_path_state[point_type].chassis_position.chassis_yaw, 
+                        target_yaw);
+        
+        if (math_compare_float(my_fabs(delta_angle), 
+                               go_path_state[point_type].angle_deadband) == 
+            MATH_FP_MORETHAN) {
+            go_path_result.turning_velocity = 
+                pid_calc(go_path_state[point_type].running_pid[ANGLE_PID], 
+                         delta_angle, 0);
+            arrive_yaw = false;
+        } else {
+            go_path_result.turning_velocity = 0.0f;
+            go_path_state[point_type].running_pid[ANGLE_PID]->iout = 0;
+            arrive_yaw = true;
+        }
+    } else {
+        go_path_result.moving_velocity = 0.0f;
+        go_path_result.speed_angle = 0.0f;
+        go_path_state[point_type].running_pid[SPEED_PID]->iout = 0;
+        arrive_xy = true;
+        
+        // 到达位置后，调整到用户指定的目标yaw角
+        float delta_angle = 
+            angle_trans(*go_path_state[point_type].chassis_position.chassis_yaw, 
+                        go_path_state[point_type].target_yaw);
+        
+        if (math_compare_float(my_fabs(delta_angle), 
+                               go_path_state[point_type].angle_deadband) == 
+            MATH_FP_MORETHAN) {
+            go_path_result.turning_velocity = 
+                pid_calc(go_path_state[point_type].running_pid[ANGLE_PID], 
+                         delta_angle, 0);
+            arrive_yaw = false;
+        } else {
+            go_path_result.turning_velocity = 0.0f;
+            go_path_state[point_type].running_pid[ANGLE_PID]->iout = 0;
+            arrive_yaw = true;
+        }
+    }
+    
+    /* 运动状态更新 */
+    if (arrive_xy && arrive_yaw) {
+        go_path_result.arrived = GO_PATH_TARGET_ARRIVE;
+    } else {
+        go_path_result.arrived = GO_PATH_TARGET_NO_ARRIVE;
+    }
+}
+
+/**
+ * @brief 顺序跑点控制函数：先跑x轴，再跑y轴，最后调整yaw角
+ * 
+ * @param point_type 点位类型
+ */
+static void x_y_yaw_sequence_control(go_path_point_type_t point_type) {
+    bool arrive_x = false;  /*!< 到达目标点x轴坐标标志位 */
+    bool arrive_y = false;  /*!< 到达目标点y轴坐标标志位 */
+    bool arrive_yaw = false; /*!< 到达目标点角度标志位 */
+    
+    /* 1. 首先控制x轴移动 */
+    float delta_x = go_path_state[point_type].target_x - 
+                    *go_path_state[point_type].chassis_position.chassis_x;
+    
+    if (math_compare_float(my_fabs(delta_x), 
+                           go_path_state[point_type].distance_deadband) == 
+        MATH_FP_MORETHAN) {
+        // 只在x轴方向移动
+        go_path_result.moving_velocity = 
+            pid_calc(go_path_state[point_type].running_pid[SPEED_PID], 
+                     my_fabs(delta_x), 0);
+        
+        // 设置x轴方向（0度或180度）
+        go_path_result.speed_angle = (delta_x > 0) ? 0.0f : PI;
+        
+        arrive_x = false;
+    } else {
+        arrive_x = true;
+        
+        /* 2. x轴到达后，控制y轴移动 */
+        float delta_y = go_path_state[point_type].target_y - 
+                        *go_path_state[point_type].chassis_position.chassis_y;
+        
+        if (math_compare_float(my_fabs(delta_y), 
+                               go_path_state[point_type].distance_deadband) == 
+            MATH_FP_MORETHAN) {
+            // 只在y轴方向移动
+            go_path_result.moving_velocity = 
+                pid_calc(go_path_state[point_type].running_pid[SPEED_PID], 
+                         my_fabs(delta_y), 0);
+            
+            // 设置y轴方向（90度或-90度）
+            go_path_result.speed_angle = (delta_y > 0) ? PI/2 : -PI/2;
+            
+            arrive_y = false;
+        } else {
+            arrive_y = true;
+            
+            /* 3. y轴到达后，控制yaw角调整 */
+            float delta_angle = 
+                angle_trans(*go_path_state[point_type].chassis_position.chassis_yaw, 
+                            go_path_state[point_type].target_yaw);
+            
+            if (math_compare_float(my_fabs(delta_angle), 
+                                   go_path_state[point_type].angle_deadband) == 
+                MATH_FP_MORETHAN) {
+                go_path_result.turning_velocity = 
+                    pid_calc(go_path_state[point_type].running_pid[ANGLE_PID], 
+                             delta_angle, 0);
+                arrive_yaw = false;
+            } else {
+                go_path_result.turning_velocity = 0.0f;
+                go_path_state[point_type].running_pid[ANGLE_PID]->iout = 0;
+                arrive_yaw = true;
+            }
+            
+            // yaw调整阶段，不进行平动
+            go_path_result.moving_velocity = 0.0f;
+            go_path_result.speed_angle = 0.0f;
+            go_path_state[point_type].running_pid[SPEED_PID]->iout = 0;
+        }
+    }
+    
+    /* 运动状态更新 */
+    if (arrive_x && arrive_y && arrive_yaw) {
+        go_path_result.arrived = GO_PATH_TARGET_ARRIVE;
+    } else {
+        go_path_result.arrived = GO_PATH_TARGET_NO_ARRIVE;
+    }
 }

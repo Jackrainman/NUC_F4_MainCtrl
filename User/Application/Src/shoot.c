@@ -15,48 +15,30 @@
 #include "logger/logger.h"
 #include "odometry_string/odometry_string.h"
 
-/* 定义遥控器按键 */
-#define SPEED_ADD_KEY       9  /* 速度增加按键 */
-#define SPEED_DEC_KEY       15 /* 速度减小按键 */
-#define SPEED_PRE_KEY       8  /* 预订转速按键 */
-#define ENABLE_KEY          10 /* 发射使能按键 */
-#define DISABLE_KEY         16 /* 发射失能按键 */
-#define BALL_LOAD_KEY       14 /* 装球按键 */
-#define SPEED_CALCULATE_KEY 12 /* 速度拟合按键 */
+#define SPEED_ADD_KEY      9  /* 速度增加按键 */
+#define SPEED_DEC_KEY      15 /* 速度减小按键 */
+#define SPEED_PRE_KEY      8  /* 预订转速按键 */
+#define ENABLE_KEY         10 /* 发射使能按键 */
+#define DISABLE_KEY        16 /* 发射失能按键 */
+#define SANCTION_KEY       0 /* 制裁按键 */
+#define SMALL_SPEED_KEY    5  /*!<切换自身坐标系*/
 
-#define SPEED_ZERO_KEY      0xFF
+// #define SPEED_CALCULATE_KEY 16 /* 速度拟合按键 */
 
-#define SHOOT_PRE_SPEED     14000
-#define SHOOT_DIVIDE_SPEED  100
-#define BALL_LOAD_SPEED     -2800
-#define ACC_SPEED           5
+#define SPEED_ZERO_KEY     0xFF
 
-TaskHandle_t shoot_machine_task_handle;
-void shoot_machine_task(void *pvParameters);
-
-/* 发射状态队列, 发射 --> 其他模块 */
-QueueHandle_t shoot_machine_status_queue;
-/* 发射事件队列, 其他模块 --> 发射 */
-QueueHandle_t shoot_machine_event_queue;
-
-shoot_sub_t shoot_sub = {0};
-// /*巨匠铁艺拟合出来的数据*/
-// #define FIT_A  1.0756e-04f /* 三分外的速度曲线拟合参数 */
-// #define FIT_B  0.9385f
-// #define FIT_C  11128.0f
-
-// #define FIT_A2 0.0024f /* 三分内的速度曲线拟合参数 */
-// #define FIT_B2 -11.5369f
-// #define FIT_C2 2.8144e+04f
+#define SHOOT_PRE_SPEED    17000
+#define SHOOT_DIVIDE_SPEED 100
+#define SANCTION_SPD       30000
 
 /* 赛场拟合出的数据 */
-#define FIT_A  -9.1348e-05f /* 三分外的速度曲线拟合参数 */
-#define FIT_B  2.7080f
-#define FIT_C  7.2400e+04f
+#define FIT_A              -9.1348e-05f /* 三分外的速度曲线拟合参数 */
+#define FIT_B              2.7080f
+#define FIT_C              7.2400e+03f
 
-#define FIT_A2 9.9838e-04f /* 三分内的速度曲线拟合参数 */
-#define FIT_B2 -3.6070f
-#define FIT_C2 1.6728e+04f
+#define FIT_A2             9.9838e-04f /* 三分内的速度曲线拟合参数 */
+#define FIT_B2             -3.6070f
+#define FIT_C2             1.6728e+04f
 
 /**
  * @brief 速度计算曲线函数
@@ -74,6 +56,16 @@ float get_friction_speed(float radium) {
     }
 }
 
+TaskHandle_t shoot_machine_task_handle;
+void shoot_machine_task(void *pvParameters);
+
+/* 发射状态队列, 发射 --> 其他模块 */
+QueueHandle_t shoot_machine_status_queue;
+/* 发射事件队列, 其他模块 --> 发射 */
+QueueHandle_t shoot_machine_event_queue;
+
+shoot_sub_t shoot_sub = {0};
+
 /**
  * @brief 摩擦带速度控制
  * 
@@ -86,26 +78,25 @@ void fribelt_speed_ctrl(uint8_t key, remote_key_event_t event) {
     shoot_machine_event_msg_t shoot_mach_event = {0};
     switch (key) {
         case SPEED_PRE_KEY:
-            shoot_mach_event.event = SHOOT_MACHINE_EVENT_FRIBELT_PRE;
-            // shoot_mach_event.shoot_speed = get_friction_speed(g_basket_radius);
-            shoot_mach_event.shoot_speed = 10000;
+            shoot_mach_event.event = SHOOT_MACHINE_EVENT_FRIBELT_DIRECT;
+            shoot_mach_event.shoot_speed = get_friction_speed(g_basket_radius);
             break;
-        // case SPEED_ZERO_KEY:
-        //     shoot_mach_event.event = SHOOT_MACHINE_EVENT_FRIBELT_ZERO;
-        //     break;
+        case SPEED_ZERO_KEY:
+            shoot_mach_event.event = SHOOT_MACHINE_EVENT_FRIBELT_ZERO;
+            break;
         case SPEED_ADD_KEY:
             shoot_mach_event.event = SHOOT_MACHINE_EVENT_FRIBELT_ADD;
             break;
         case SPEED_DEC_KEY:
             shoot_mach_event.event = SHOOT_MACHINE_EVENT_FRIBELT_DEC;
             break;
-        case BALL_LOAD_KEY:
-            shoot_mach_event.event = SHOOT_MACHINE_EVENT_LOAD_BALL;
-            shoot_mach_event.shoot_speed = BALL_LOAD_SPEED;
-            break;
-        case SPEED_CALCULATE_KEY:
+        case SANCTION_KEY:
             shoot_mach_event.event = SHOOT_MACHINE_EVENT_FRIBELT_PRE;
-            shoot_mach_event.shoot_speed = get_friction_speed(g_basket_radius);
+            shoot_mach_event.shoot_speed = SANCTION_SPD;
+            break;
+        case SMALL_SPEED_KEY:
+            shoot_mach_event.event = SHOOT_MACHINE_EVENT_FRIBELT_PRE;
+            shoot_mach_event.shoot_speed = 3500;
             break;
         default:
             break;
@@ -152,7 +143,7 @@ void push_ball_ctrl(uint8_t key, remote_key_event_t event) {
             }
             break;
         case DISABLE_KEY:
-            // shoot_mach_event.event = SHOOT_MACHINE_EVENT_DISABLE; /* 失能 */
+            shoot_mach_event.event = SHOOT_MACHINE_EVENT_DISABLE; /* 失能 */
             shoot_sub.flag = 0;
             shoot_sub.shoot_speed = 0;
             sub_friction_data(shoot_sub.shoot_speed);
@@ -183,8 +174,6 @@ void shoot_ctrl_init(void) {
                                  fribelt_speed_ctrl); /* 加速 */
     remote_register_key_callback(SPEED_PRE_KEY, REMOTE_KEY_PRESS_DOWN,
                                  fribelt_speed_ctrl); /* 预备转速 */
-    remote_register_key_callback(BALL_LOAD_KEY, REMOTE_KEY_PRESS_DOWN,
-                                 fribelt_speed_ctrl); /* 倒转装球 */
     remote_register_key_callback(SPEED_DEC_KEY, REMOTE_KEY_PRESS_DOWN,
                                  fribelt_speed_ctrl); /* 减速 */
 
@@ -195,8 +184,8 @@ void shoot_ctrl_init(void) {
                                  push_ball_ctrl); /* 推接球 + 使能 */
     remote_register_key_callback(DISABLE_KEY, REMOTE_KEY_PRESS_DOWN,
                                  push_ball_ctrl); /* 失能 */
-    remote_register_key_callback(SPEED_CALCULATE_KEY, REMOTE_KEY_PRESS_UP,
-                                 fribelt_speed_ctrl); /* 速度拟合 */
+    remote_register_key_callback(SMALL_SPEED_KEY, REMOTE_KEY_PRESS_DOWN,
+                                 fribelt_speed_ctrl);
 
     xTaskCreate(shoot_machine_task, "shoot_machine_task", 256, NULL, 4,
                 &shoot_machine_task_handle);
@@ -282,27 +271,24 @@ void shoot_machine_task(void *pvParameters) {
                 shoot_sub.flag = 2;
                 sub_friction_flag(shoot_sub.flag);
                 /* 预备转速 */
-                for (int8_t i = 0; i < ACC_SPEED; i++) {
-                    shoot_sub.shoot_speed =
-                        (i + 1) * event.shoot_speed / ACC_SPEED;
+                for (int8_t i = 0; i < 10; i++) {
+                    shoot_sub.shoot_speed = (i + 1) * event.shoot_speed / 10;
                     sub_friction_data(shoot_sub.shoot_speed);
                     vTaskDelay(200);
                 }
-
                 msg.fribelt_status = SHOOT_MACHINE_STATUS_FRIBELT_DONE;
-            } break;
-
-            case SHOOT_MACHINE_EVENT_LOAD_BALL: {
-                shoot_sub.flag = 2;
-                sub_friction_flag(shoot_sub.flag);
-                shoot_sub.shoot_speed = event.shoot_speed;
-                sub_friction_data(shoot_sub.shoot_speed);
             } break;
 
             case SHOOT_MACHINE_EVENT_FRIBELT_ZERO: {
                 /* 转速清零 */
                 shoot_sub.shoot_speed = 0;
                 msg.fribelt_status = SHOOT_MACHINE_STATUS_FRIBELT_ZERO;
+            } break;
+
+            case SHOOT_MACHINE_EVENT_FRIBELT_DIRECT: {
+                /* 直接设置转速事件 */
+                shoot_sub.shoot_speed = event.shoot_speed;
+                sub_friction_data(shoot_sub.shoot_speed);
             } break;
 
             case SHOOT_MACHINE_EVENT_FRIBELT_ADD: {
@@ -315,12 +301,6 @@ void shoot_machine_task(void *pvParameters) {
                 /* 转速减小 */
                 shoot_sub.shoot_speed -= SHOOT_DIVIDE_SPEED;
                 msg.fribelt_status = SHOOT_MACHINE_STATUS_FRIBELT_DONE;
-            } break;
-
-            case SHOOT_MACHINE_EVENT_FRIBELT_DIRECT: {
-                /* 直接设置转速事件 */
-                shoot_sub.shoot_speed = event.shoot_speed;
-                sub_friction_data(shoot_sub.shoot_speed);
             } break;
 
             case SHOOT_MACHINE_EVENT_CALCULATE: {

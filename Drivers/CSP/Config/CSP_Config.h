@@ -390,7 +390,7 @@
 
 // <e> USART3 (Universal asynchronous receiver transmitter)
 
-#define USART3_ENABLE 0 
+#define USART3_ENABLE 0
 
 #if USART3_ENABLE
 
@@ -898,7 +898,7 @@
 #endif /* UART5_IT_ENABLE */
 
 //   <e> Enable UART5 DMA RX
-#define UART5_RX_DMA             1
+#define UART5_RX_DMA             0
 
 #if UART5_RX_DMA
 
@@ -1094,7 +1094,7 @@
 #endif /* USART6_IT_ENABLE */
 
 //   <e> Enable USART6 DMA RX
-#define USART6_RX_DMA             0
+#define USART6_RX_DMA             1
 
 #if USART6_RX_DMA
 
@@ -1142,7 +1142,7 @@
 #endif  /* USART6_RX_DMA */
 
 //   <e> Enable USART6 DMA TX
-#define USART6_TX_DMA             0
+#define USART6_TX_DMA             1
 
 #if USART6_TX_DMA
 
@@ -1190,13 +1190,13 @@
 
 // <e> UART7 (Universal synchronous asynchronous receiver transmitter)
 
-#define UART7_ENABLE 0 
+#define UART7_ENABLE 1
 
 #if UART7_ENABLE
 
 //   <o> UART7_TX Pin
 //       <0=>Not Used <1=>PA15 <2=>PB4 <3=>PE8 <4=>PF7 
-#define UART7_TX_ID 0
+#define UART7_TX_ID 3
 
 #if (UART7_TX_ID == 0)
 #define UART7_TX 0
@@ -1222,7 +1222,7 @@
 
 //   <o> UART7_RX Pin
 //       <0=>Not Used <1=>PA8 <2=>PB3 <3=>PE7 <4=>PF6 
-#define UART7_RX_ID 0
+#define UART7_RX_ID 3
 
 #if (UART7_RX_ID == 0)
 #define UART7_RX 0
@@ -1247,7 +1247,7 @@
 #endif  /* UART7_RX_ID */
 
 //   <e> Enable UART7 Interrupt
-#define UART7_IT_ENABLE 0
+#define UART7_IT_ENABLE 1
 
 #if UART7_IT_ENABLE
 
@@ -1262,7 +1262,7 @@
 #endif /* UART7_IT_ENABLE */
 
 //   <e> Enable UART7 DMA RX
-#define UART7_RX_DMA             0
+#define UART7_RX_DMA             1
 
 #if UART7_RX_DMA
 
@@ -1310,7 +1310,7 @@
 #endif  /* UART7_RX_DMA */
 
 //   <e> Enable UART7 DMA TX
-#define UART7_TX_DMA             0
+#define UART7_TX_DMA             1
 
 #if UART7_TX_DMA
 

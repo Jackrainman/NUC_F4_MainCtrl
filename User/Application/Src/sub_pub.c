@@ -25,12 +25,17 @@
 #include "logger/logger.h"
 #include "my_math/my_math.h"
 
+#define ACT_POS_USART_HANDLE &uart5_handle
+#define NUC_UART_HANDLE      &usart6_handle
+#define REMOTE_UART_HANDLE   &uart4_handle
+
 TaskHandle_t sub_pub_task_handle;
 TaskHandle_t msg_polling_task_handle;
+TaskHandle_t action_position_recv_task_handle;
 
 float *world_yaw; /* 指向全场定位的坐标 */
-float g_basket_radius;
 
+float g_basket_radius;
 static struct __packed {
     float chassis_speedx;    /* 底盘speedx */
     float chassis_speedy;    /* 底盘speedy */
@@ -96,10 +101,6 @@ void sub_friction_flag(uint8_t shoot_flag) {
     pub_to_slave_data.shoot_flag = shoot_flag;
 }
 
-#define ACT_POS_USART_HANDLE &usart6_handle
-#define NUC_UART_HANDLE      &uart5_handle
-#define REMOTE_UART_HANDLE   &uart4_handle
-
 typedef enum __attribute((packed)) {
     SERIAL_RELOCALIZATION_STOP,  /* 重定位停止为0 */
     SERIAL_RELOCALIZATION_START, /* 重定位启动为1 */
@@ -116,7 +117,6 @@ typedef enum __attribute((packed)) {
  */
 void sub_pub_task(void *pvParameters) {
     UNUSED(pvParameters);
-    static key_press_t key = KEY_NO_PRESS;
     serial_flag_t send_nuc_data = SERIAL_STOP_SERVICE;
 
     /* 初始化pub_to_slave_data,防止被编译器优化*/
@@ -125,6 +125,7 @@ void sub_pub_task(void *pvParameters) {
     /* 主板发送给从板 */
     message_register_send_uart(MSG_TO_SLAVE, &usart2_handle, 128);
     /* F4-小电脑 */
+
     message_register_send_uart(MSG_NUC, NUC_UART_HANDLE, 32);
 
     while (1) {
@@ -135,32 +136,10 @@ void sub_pub_task(void *pvParameters) {
                           (uint8_t *)&pub_to_slave_data,
                           sizeof(pub_to_slave_data));
 
-        /* 小电脑发送启动数据 */
-        key = key_scan(0); /* 按键扫描 */
-        if (key == KEY0_PRESS) {
-            /* 发送0为停止 */
-            send_nuc_data = SERIAL_STOP_SERVICE;
-            message_send_data(MSG_NUC, MSG_DATA_UINT8,
-                              (uint8_t *)&send_nuc_data, sizeof(send_nuc_data));
-            BEEP_OFF();
-        } else if (key == KEY1_PRESS) {
-            /* 发送1为开始 */
-            send_nuc_data = SERIAL_START_SERVICE;
-            message_send_data(MSG_NUC, MSG_DATA_UINT8,
-                              (uint8_t *)&send_nuc_data, sizeof(send_nuc_data));
-            if (fabsf(g_nuc_pos_data.x) >= 15.0f ||
-                fabsf(g_nuc_pos_data.yaw) >= 0.3f) {
-                /* 小电脑位置数据无效时蓝灯led3亮 */
-                LED3_ON();
-                BEEP_ON();
-            } else {
-                LED3_OFF();
-                BEEP_OFF();
-            }
-        }
         vTaskDelay(2);
     }
 }
+
 nuc_pos_data_t g_nuc_pos_data;
 /**
  * @brief 小电脑接收回调函数
@@ -186,43 +165,29 @@ static void nuc_msg_callback(uint32_t msg_length, uint8_t msg_id_type,
 
 void msg_polling_task(void *pvParameters) {
     UNUSED(pvParameters);
+
     /* 注册遥控器接收 */
     message_register_polling_uart(MSG_REMOTE, REMOTE_UART_HANDLE, 32, 32);
     /* 注册遥控器接收callback */
     message_register_recv_callback(MSG_REMOTE, remote_receive_callback);
 
     /* 注册action接收 */
-    act_position_register_send_uart(ACT_POS_USART_HANDLE);
-    // static uint8_t act_buf[50];
-    // uint32_t act_recv_len = 0;
-    // uint32_t start_time = 0;
+    act_position_register_uart(ACT_POS_USART_HANDLE);
 
     /* 注册小电脑接收 */
-    message_register_polling_uart(MSG_NUC, NUC_UART_HANDLE, 512, 512);
-    message_register_recv_callback(MSG_NUC, nuc_msg_callback);
+    // message_register_polling_uart(MSG_NUC, NUC_UART_HANDLE, 512, 512);
+    // message_register_recv_callback(MSG_NUC, nuc_msg_callback);
 
     /* 遥控器上报数据类型 */
     // remote_report_data_t report_data = REMOTE_REPORT_POSITION;
 
     while (1) {
-#if 0 /* 用于检测action数据接受是否正常 */
-        act_recv_len =
-            uart_dmarx_read(ACT_POS_USART_HANDLE, act_buf, sizeof(act_buf));
-
-        if (act_recv_len) {
-            act_position_parse_data(act_buf, act_recv_len);
-            if (HAL_GetTick() - start_time > 100) {
-                LED3_TOGGLE();
-                start_time = HAL_GetTick();
-            }
-        }
-#endif
         message_polling_data();
-
         // xQueueSend(remote_report_data_queue, &report_data, 1);
-        float delat_x = BASKET_POINT_X - g_nuc_pos_data.x;
-        float delat_y = BASKET_POINT_Y - g_nuc_pos_data.y;
-        g_basket_radius = sqrt(delat_x * delat_x + delat_y * delat_y);
+        float delat_x = BASKET_POINT_X - g_action_pos_data.x;
+        float delat_y = BASKET_POINT_Y - g_action_pos_data.y;
+
+        g_basket_radius = sqrtf(delat_x * delat_x + delat_y * delat_y);
 
         vTaskDelay(2);
     }

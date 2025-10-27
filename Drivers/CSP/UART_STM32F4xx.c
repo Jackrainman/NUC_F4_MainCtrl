@@ -4,7 +4,7 @@
  * @brief   Chip Support Package of UART on STM32F4xx
  * @version 3.3.3
  * @date    2025-05-19
- * @note    Generate Automatically. 
+ * @note    Generate Automatically.
  */
 
 #include <CSP_Config.h>
@@ -225,7 +225,7 @@ uint8_t usart1_init(uint32_t baud_rate) {
     if (HAL_UART_Init(&usart1_handle) != HAL_OK) {
         return UART_INIT_FAIL;
     }
-    
+
 #if USART1_RX_DMA
     __HAL_UART_ENABLE_IT(&usart1_handle, UART_IT_IDLE);
     __HAL_UART_CLEAR_IDLEFLAG(&usart1_handle);
@@ -365,7 +365,7 @@ uint8_t usart1_deinit(void) {
 
 /**
  * @}
- */ 
+ */
 
 
 /*****************************************************************************
@@ -530,7 +530,7 @@ uint8_t usart2_init(uint32_t baud_rate) {
     if (HAL_UART_Init(&usart2_handle) != HAL_OK) {
         return UART_INIT_FAIL;
     }
-    
+
 #if USART2_RX_DMA
     __HAL_UART_ENABLE_IT(&usart2_handle, UART_IT_IDLE);
     __HAL_UART_CLEAR_IDLEFLAG(&usart2_handle);
@@ -670,7 +670,7 @@ uint8_t usart2_deinit(void) {
 
 /**
  * @}
- */ 
+ */
 
 
 /*****************************************************************************
@@ -835,7 +835,7 @@ uint8_t usart3_init(uint32_t baud_rate) {
     if (HAL_UART_Init(&usart3_handle) != HAL_OK) {
         return UART_INIT_FAIL;
     }
-    
+
 #if USART3_RX_DMA
     __HAL_UART_ENABLE_IT(&usart3_handle, UART_IT_IDLE);
     __HAL_UART_CLEAR_IDLEFLAG(&usart3_handle);
@@ -975,7 +975,7 @@ uint8_t usart3_deinit(void) {
 
 /**
  * @}
- */ 
+ */
 
 
 /*****************************************************************************
@@ -1140,7 +1140,7 @@ uint8_t uart4_init(uint32_t baud_rate) {
     if (HAL_UART_Init(&uart4_handle) != HAL_OK) {
         return UART_INIT_FAIL;
     }
-    
+
 #if UART4_RX_DMA
     __HAL_UART_ENABLE_IT(&uart4_handle, UART_IT_IDLE);
     __HAL_UART_CLEAR_IDLEFLAG(&uart4_handle);
@@ -1280,7 +1280,7 @@ uint8_t uart4_deinit(void) {
 
 /**
  * @}
- */ 
+ */
 
 
 /*****************************************************************************
@@ -1445,7 +1445,7 @@ uint8_t uart5_init(uint32_t baud_rate) {
     if (HAL_UART_Init(&uart5_handle) != HAL_OK) {
         return UART_INIT_FAIL;
     }
-    
+
 #if UART5_RX_DMA
     __HAL_UART_ENABLE_IT(&uart5_handle, UART_IT_IDLE);
     __HAL_UART_CLEAR_IDLEFLAG(&uart5_handle);
@@ -1585,7 +1585,7 @@ uint8_t uart5_deinit(void) {
 
 /**
  * @}
- */ 
+ */
 
 
 /*****************************************************************************
@@ -1750,7 +1750,7 @@ uint8_t usart6_init(uint32_t baud_rate) {
     if (HAL_UART_Init(&usart6_handle) != HAL_OK) {
         return UART_INIT_FAIL;
     }
-    
+
 #if USART6_RX_DMA
     __HAL_UART_ENABLE_IT(&usart6_handle, UART_IT_IDLE);
     __HAL_UART_CLEAR_IDLEFLAG(&usart6_handle);
@@ -1890,7 +1890,7 @@ uint8_t usart6_deinit(void) {
 
 /**
  * @}
- */ 
+ */
 
 
 /*****************************************************************************
@@ -2037,7 +2037,7 @@ uint8_t uart7_init(uint32_t baud_rate) {
     if (HAL_UART_Init(&uart7_handle) != HAL_OK) {
         return UART_INIT_FAIL;
     }
-    
+
 #if UART7_RX_DMA
     __HAL_UART_ENABLE_IT(&uart7_handle, UART_IT_IDLE);
     __HAL_UART_CLEAR_IDLEFLAG(&uart7_handle);
@@ -2169,7 +2169,7 @@ uint8_t uart7_deinit(void) {
 
 /**
  * @}
- */ 
+ */
 
 
 /*****************************************************************************
@@ -2316,7 +2316,7 @@ uint8_t uart8_init(uint32_t baud_rate) {
     if (HAL_UART_Init(&uart8_handle) != HAL_OK) {
         return UART_INIT_FAIL;
     }
-    
+
 #if UART8_RX_DMA
     __HAL_UART_ENABLE_IT(&uart8_handle, UART_IT_IDLE);
     __HAL_UART_CLEAR_IDLEFLAG(&uart8_handle);
@@ -2448,7 +2448,7 @@ uint8_t uart8_deinit(void) {
 
 /**
  * @}
- */ 
+ */
 
 
 /*****************************************************************************
@@ -2595,7 +2595,7 @@ uint8_t uart9_init(uint32_t baud_rate) {
     if (HAL_UART_Init(&uart9_handle) != HAL_OK) {
         return UART_INIT_FAIL;
     }
-    
+
 #if UART9_RX_DMA
     __HAL_UART_ENABLE_IT(&uart9_handle, UART_IT_IDLE);
     __HAL_UART_CLEAR_IDLEFLAG(&uart9_handle);
@@ -2727,7 +2727,7 @@ uint8_t uart9_deinit(void) {
 
 /**
  * @}
- */ 
+ */
 
 
 /*****************************************************************************
@@ -2874,7 +2874,7 @@ uint8_t uart10_init(uint32_t baud_rate) {
     if (HAL_UART_Init(&uart10_handle) != HAL_OK) {
         return UART_INIT_FAIL;
     }
-    
+
 #if UART10_RX_DMA
     __HAL_UART_ENABLE_IT(&uart10_handle, UART_IT_IDLE);
     __HAL_UART_CLEAR_IDLEFLAG(&uart10_handle);
@@ -3006,7 +3006,7 @@ uint8_t uart10_deinit(void) {
 
 /**
  * @}
- */ 
+ */
 
 /*****************************************************************************
  * @defgroup Public UART functions.

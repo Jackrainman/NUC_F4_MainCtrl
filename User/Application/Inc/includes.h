@@ -23,37 +23,20 @@ extern "C" {
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
-
-/* 
-挑战赛1：x=-3609    y=-934
-挑战赛4：x=-3426    y=-927  offset_x=0  offset_y=0 （10HZ室内温度原因有误差）
-
-RED1  offsetx +16 offsety -20   [7.11-7am] {标定时的offset(0,0)}{随机点大多数可以投}
-      修正：offsetx -16 offsety +20
-BLUE1 offsetx +17 offsety +41   [7.11-8am] {使用了RED1的offset测的，但是大多数随机点可以投进} [3]
-
-RED2  offsetx -27 offsety +20   [7.11-10am] {标定时的offset(0,0)} 11.20AM[4]
-BLUE2 offsetx -4  offsety +46   [7.11-9am]  {标定时的offset(0,0)} [4]
-*/
+#include <stdio.h>
 
 /* 投篮赛点位 */
-// #define BASKET_OFFSET_X -74.0f //-10-54
-// #define BASKET_OFFSET_Y -63.0f
-
-#define BASKET_OFFSET_X -16.0f 
+#define BASKET_OFFSET_X -16.0f
 #define BASKET_OFFSET_Y +20.0f
-/* 理论值 */
-#define BASKET_POINT_X  (-3624.37f + BASKET_OFFSET_X)
-#define BASKET_POINT_Y  (-910.0f + BASKET_OFFSET_Y)
 
-// #define BASKET_POINT_X  (-3426.0f + BASKET_OFFSET_X)
-// #define BASKET_POINT_Y  (-934.0f + BASKET_OFFSET_Y)
+#define BASKET_POINT_X  (3624.3744f + BASKET_OFFSET_X)
+#define BASKET_POINT_Y  (13439.3975f + BASKET_OFFSET_Y)
+
 #define SITH_WIDTH      7400.0f
 #define LOOP_NUM        18
+
 extern const float radium_speed[LOOP_NUM][2];
 extern float g_basket_radius;
-
-#define DEV 1
 
 /** **********************************************************************************************
  * @defgroup rtos_task 
@@ -90,6 +73,7 @@ typedef struct {
 extern nuc_pos_data_t g_nuc_pos_data;
 
 extern TaskHandle_t sub_pub_task_handle;
+extern TaskHandle_t action_position_recv_task_handle;
 extern TaskHandle_t msg_polling_task_handle;
 void sub_pub_task(void *pvParameters);
 void msg_polling_task(void *pvParameters);
@@ -114,13 +98,7 @@ typedef enum {
     CHASSIS_SET_UNHALT,     /* 解自锁 */
     CHASSIS_SET_POINT,      /* 跑点 */
     CHASSIS_SET_MANUAL,     /* 手控 */
-    CHASSIS_SHOOT_AIMING,   /* 投篮点自瞄 */
-    CHASSIS_LEFT_AIMING,    /* 左侧装球点自瞄 */
-    CHASSIS_RIGHT_AIMING,   /* 右侧装球点自瞄 */
-    CHASSIS_RESET_AIMING,   /* 解除自瞄 */
     CHASSIS_SET_MIN_RADIUM, /* 计算并去往最近的点位,且恢复手控 */
-    CHASSIS_SET_LEFT_POINT,
-    CHASSIS_SET_RIGHT_POINT,
 
     CHASSIS_SET_NO_TASK
 } chassis_event_t;
@@ -149,7 +127,6 @@ typedef struct chassis_state {
     bool collimation_flag; /*!< 自瞄标志位 */
     bool yaw_flag;         /*!< 坐标系切换标志位 */
     uint8_t point_index;   /*!< 目标点序列号 */
-    bool spd_z;
 } chassis_state_t;
 extern QueueHandle_t chassis_ctrl_queue;   /* 底盘控制队列 */
 extern chassis_state_t chassis_state;      /* 底盘状态 */
@@ -159,7 +136,7 @@ void chassis_init(void);
 void chassis_set_halt(bool);
 // void chassis_ctrl_queue_reset(void);
 void chassis_set_ctrl(chassis_event_t event);
-uint8_t chassis_overwrite_pointarray(int target_index);
+uint8_t chassis_overwrite_pointarray(uint8_t target_index);
 /**
  * @} chassis
  */
@@ -206,10 +183,10 @@ typedef enum {
     SHOOT_MACHINE_EVENT_LOAD_BALL,  /* 装球事件 */
 
     SHOOT_MACHINE_EVENT_FRIBELT_PRE,    /* 预备转速事件 */
+    SHOOT_MACHINE_EVENT_FRIBELT_DIRECT, /* 直接设置转速事件，一定要谨慎！ */
     SHOOT_MACHINE_EVENT_FRIBELT_ZERO,   /* 转速清零事件 */
     SHOOT_MACHINE_EVENT_FRIBELT_ADD,    /* 转速增加事件 */
     SHOOT_MACHINE_EVENT_FRIBELT_DEC,    /* 转速减少事件 */
-    SHOOT_MACHINE_EVENT_FRIBELT_DIRECT, /* 直接设置转速事件，一定要谨慎！ */
     SHOOT_MACHINE_EVENT_CALCULATE,      /* 计算转速 */
 } shoot_machine_event_t;
 
@@ -240,12 +217,16 @@ void shoot_machine_set_ctrl(float speed, shoot_machine_event_t event);
  * @{
  */
 typedef enum {
-    DRIBBLE_WHOLE_PROCESS, /* 全流程 */
+    DRIBBLE_WHOLE_PROCESS, /* 纯运球流程 */
+    DRIBBLE_PART_PROCESS,  /* 交接球流程 */
+
     DRIBBLE_OPEN_CLAMP,    /* 张开夹子 */
     DRIBBLE_CLOSE_CLAMP,   /* 关闭夹子 */
     DRIBBLE_HIT_BALL,      /* 单击打球 */
     DRIBBLE_PUSH_OUT,      /* 整个机构推出 */
     DRIBBLE_PUSH_IN,       /* 整个机构缩回 */
+    DRIBBLE_DRAWER_OUT,    /* 接球抽屉伸出 */
+    DRIBBLE_DRAWER_IN,     /* 接球抽屉回缩 */
     DRIBBLE_GET_STATUES,   /* 获得夹子中球的状态 */
 
     DRIBBLE_MOVE_TO_CATCH,   /* 伸出交接装置到运球下 */

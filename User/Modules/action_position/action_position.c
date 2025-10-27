@@ -2,26 +2,34 @@
  * @file    action_position.h
  * @author  Deadline039
  * @brief   东大全场定位解析代码
- * @version 1.0
+ * @version 0.2
  * @date    2023-11-11
+ * @ref
  */
 
 #include "action_position.h"
 
 /* 串口通信句柄 */
-static UART_HandleTypeDef *send_uart;
+static UART_HandleTypeDef *uart_handle = NULL;
 
 /**
  * @brief 全场定位数据
  */
-act_pos_data_t g_action_pos_data;
+act_pos_data_t g_action_pos_data = {0};
+
+/* 从串口接收到的字符 */
+static uint8_t g_uart_byte;
 
 /**
- * @brief 逐字节解析数据, 转换成坐标数据
+ * @brief 从串口数据读取字节, 转换成坐标数据
  *
  * @param recv_byte 接收的一个字节
+ * @note 此程序会更新外部变量g_position_x, g_position_y, g_position_roll,
+ *       g_position_pitch, g_position_yaw, g_position_yaw_speed的值
  */
-static void act_position_parse_byte(uint8_t byte) {
+static void uart_receive_callback(UART_HandleTypeDef *huart) {
+    UNUSED(huart);
+
     /* 接收计数 */
     static uint8_t recv_count = 0;
     /* 数据索引 */
@@ -35,7 +43,7 @@ static void act_position_parse_byte(uint8_t byte) {
 
     switch (recv_count) {
         case 0: {
-            if (byte == 0x0D) {
+            if (g_uart_byte == 0x0D) {
                 recv_count++;
             } else {
                 recv_count = 0;
@@ -43,17 +51,17 @@ static void act_position_parse_byte(uint8_t byte) {
         } break;
 
         case 1: {
-            if (byte == 0x0A) {
+            if (g_uart_byte == 0x0A) {
                 data_index = 0;
                 recv_count++;
-            } else if (byte == 0x0D) {
+            } else if (g_uart_byte == 0x0D) {
             } else {
                 recv_count = 0;
             }
         } break;
 
         case 2: {
-            data_buffer.recv_data[data_index] = byte;
+            data_buffer.recv_data[data_index] = g_uart_byte;
             data_index++;
             if (data_index >= 24) {
                 data_index = 0;
@@ -62,7 +70,7 @@ static void act_position_parse_byte(uint8_t byte) {
         } break;
 
         case 3: {
-            if (byte == 0x0A) {
+            if (g_uart_byte == 0x0A) {
                 recv_count++;
             } else {
                 recv_count = 0;
@@ -70,14 +78,13 @@ static void act_position_parse_byte(uint8_t byte) {
         } break;
 
         case 4: {
-            if (byte == 0x0D) {
+            if (g_uart_byte == 0x0D) {
                 g_action_pos_data.yaw = data_buffer.act_val[0];
                 g_action_pos_data.roll = data_buffer.act_val[1];
                 g_action_pos_data.pitch = data_buffer.act_val[2];
-                g_action_pos_data.x = -data_buffer.act_val[3];
+                g_action_pos_data.x = -data_buffer.act_val[3];      
                 g_action_pos_data.y = -data_buffer.act_val[4];
                 g_action_pos_data.yaw_speed = data_buffer.act_val[5];
-                g_action_pos_data.recv_cplt = true;
             }
             recv_count = 0;
         } break;
@@ -86,32 +93,24 @@ static void act_position_parse_byte(uint8_t byte) {
             recv_count = 0;
         } break;
     }
+
+    HAL_UART_Receive_IT(huart, &g_uart_byte, 1);
 }
 
 /**
- * @brief 注册串口, 将通过这个串口发送数据
+ * @brief 注册串口, 将通过这个串口收发数据
  *
- * @param huart 串口句柄
+ * @param huart
  */
-void act_position_register_send_uart(UART_HandleTypeDef *huart) {
+void act_position_register_uart(UART_HandleTypeDef *huart) {
     if (huart == NULL) {
         return;
     }
 
-    send_uart = huart;
-}
-
-/**
- * @brief 解析数据
- * 
- * @param data 数据内容
- * @param len 数据长度
- * @note 解析完毕后会更新`g_action_pos_data`全局变量
- */
-void act_position_parse_data(uint8_t *data, uint32_t len) {
-    for (uint32_t i = 0; i < len; ++i) {
-        act_position_parse_byte(data[i]);
-    }
+    uart_handle = huart;
+    HAL_UART_Receive_IT(huart, &g_uart_byte, 1);
+    HAL_UART_RegisterCallback(huart, HAL_UART_RX_COMPLETE_CB_ID,
+                              uart_receive_callback);
 }
 
 /**
@@ -121,7 +120,8 @@ void act_position_parse_data(uint8_t *data, uint32_t len) {
  * @param[in] source_str 源字符串
  * @param[in] len 字符串长度
  */
-static void act_strcat(uint8_t *output_str, uint8_t *source_str, uint16_t len) {
+static void stract(uint8_t *output_str, uint8_t *source_str, uint16_t len) {
+
     uint16_t start_ptr = 0;
     while (output_str[start_ptr] != '\0') {
         start_ptr++;
@@ -132,9 +132,9 @@ static void act_strcat(uint8_t *output_str, uint8_t *source_str, uint16_t len) {
 }
 
 /**
- * @brief 设置新数据结构体, 由于是共用体, 
- *        将小数放入时会自动将 data 数组变成小数的内存内容, 
- *        无需再进行各种二进制操作把浮点数转换成 byte
+ * @brief 设置新数据结构体, 由于是共用体,
+ *        将小数放入时会自动将data数组变成小数的内存内容,
+ *        无需再进行各种二进制操作把浮点数转换成byte
  */
 static union {
     float new_data;
@@ -142,58 +142,58 @@ static union {
 } new_set;
 
 /**
- * @brief 更新 X 坐标
+ * @brief 更新X坐标
  *
- * @param new_x 新的 x
- * @note 为了防止重复更新全场定位数据忘记延时, 导致全场定位数据出错, 
- *       函数内部会延时 10ms
+ * @param new_x 新的x
+ * @note 为了防止重复更新全场定位数据忘记延时, 导致全场定位数据出错,
+ *       函数内部会延时10ms
  */
 void act_position_update_x(float new_x) {
     uint8_t update_data[8] = "ACTX";
     new_set.new_data = new_x;
-    act_strcat(update_data, new_set.data, 4);
-    HAL_UART_Transmit(send_uart, update_data, 8, 0xFFFF);
+    stract(update_data, new_set.data, 4);
+    HAL_UART_Transmit(uart_handle, update_data, 8, 0xFFFF);
     HAL_Delay(10);
 }
 
 /**
- * @brief 更新 Y 坐标
+ * @brief 更新Y坐标
  *
- * @param new_y 新的 y
- * @note 为了防止重复更新全场定位数据忘记延时, 导致全场定位数据出错, 
- *       函数内部会延时 10ms
+ * @param new_y 新的y
+ * @note 为了防止重复更新全场定位数据忘记延时, 导致全场定位数据出错,
+ *       函数内部会延时10ms
  */
 void act_position_update_y(float new_y) {
     uint8_t update_data[8] = "ACTY";
     new_set.new_data = new_y;
-    act_strcat(update_data, new_set.data, 4);
-    HAL_UART_Transmit(send_uart, update_data, 8, 0xFFFF);
+    stract(update_data, new_set.data, 4);
+    HAL_UART_Transmit(uart_handle, update_data, 8, 0xFFFF);
     HAL_Delay(10);
 }
 
 /**
- * @brief 更新航向角 (z 轴)
+ * @brief 更新航向角(z轴)
  *
  * @param new_yaw 新的航向角
- * @note 为了防止重复更新全场定位数据忘记延时, 导致全场定位数据出错, 
- *       函数内部会延时 10ms
+ * @note 为了防止重复更新全场定位数据忘记延时, 导致全场定位数据出错,
+ *       函数内部会延时10ms
  */
 void act_position_update_yaw(float new_yaw) {
     uint8_t update_data[8] = "ACTJ";
     new_set.new_data = new_yaw;
-    act_strcat(update_data, new_set.data, 4);
-    HAL_UART_Transmit(send_uart, update_data, 8, 0xFFFF);
+    stract(update_data, new_set.data, 4);
+    HAL_UART_Transmit(uart_handle, update_data, 8, 0xFFFF);
     HAL_Delay(10);
 }
 
 /**
- * @brief 清空全场定位数据, 从 0 开始
+ * @brief 清空全场定位数据, 从0开始
  *
- * @note 为了防止重复更新全场定位数据忘记延时, 导致全场定位数据出错, 
- *       函数内部会延时 10ms
+ * @note 为了防止重复更新全场定位数据忘记延时, 导致全场定位数据出错,
+ *       函数内部会延时10ms
  */
 void act_position_reset_data(void) {
     uint8_t update_data[8] = "ACT0";
-    HAL_UART_Transmit(send_uart, update_data, 8, 0xFFFF);
+    HAL_UART_Transmit(uart_handle, update_data, 8, 0xFFFF);
     HAL_Delay(10);
 }

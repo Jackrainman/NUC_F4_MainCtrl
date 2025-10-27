@@ -6041,6 +6041,7 @@ static void prvInitialiseTaskLists( void )
 /*-----------------------------------------------------------*/
 
 static void prvCheckTasksWaitingTermination( void )
+
 {
     /** THIS FUNCTION IS CALLED FROM THE RTOS IDLE TASK **/
 

@@ -4,33 +4,27 @@
  * @brief 主要控制逻辑,用于给不同模块发布消息,控制总流程
  * @version 0.1
  * @date 2025-04-27
- *
+ * 
  * @copyright Copyright (c) 2025
- *
+ * 
  */
 #include "includes.h"
 #include "remote_ctrl/remote_ctrl.h"
 #include "logger/logger.h"
 #include "../Utils/my_math/my_math.h"
-#define RADIUM_CTRL               1 /* 这个宏打开的时候右手遥感y轴可以控制半径的选择 */
+#define RADIUM_CTRL              0
 
-#define MAIN_CTRL_MIN_RADIUM_KEY  18  /* 自动跑环按键，暂时不用 */
-#define MAIN_CTRL_RIGHT_POINT_KEY 18 /* 右侧自动装球跑点 */
-#define MAIN_CTRL_LEFT_POINT_KEY  17 /* 左侧自动装球跑点 */
-#define MAIN_CTRL_SMALL_LOOP_KEY  5  /* 切换小环按键 */
-#define MAIN_CTRL_BIG_LOOP_KEY    11 /* 切换大环按键 */
-//#define MAIN_CTRL_AUTO_POINT_KEY  4
+#define MAIN_CTRL_MIN_RADIUM_KEY 17 /* 自动跑环按键，暂时不用 */
+#define MAIN_CTRL_AUTO_POINT_RUN 4 /* 自动跑点运行 */
 
 typedef enum {
     MAIN_CTRL_RADIUM,     /* 自动跑环信号 */
-    MAIN_CTRL_LEFT_BALL,  /* 右侧自动装球跑点信号 */
-    MAIN_CTRL_RIGHT_BALL, /* 左侧自动装球跑点信号 */
-    MAIN_CTRL_SMALL_LOOP, /* 切换小环信号 */
-    MAIN_CTRL_BIG_LOOP    /* 切换大环信号 */
+    MAIN_CTRL_POINT_RUN   /* 自动跑点信号 */
 } main_ctrl_queue_t;
 
 TaskHandle_t main_ctrl_task_handle;
 QueueHandle_t main_ctrl_queue;
+
 
 /* [半径][转速] 数组，半径小于3100为三分线内的点 */
 /* 7.11比赛场地测试的参数 */
@@ -43,22 +37,13 @@ const float radium_speed[LOOP_NUM][2] = {
     {5400, 19300},      {5700, 19700 /**/}, {6000, 20200}};
 
 
-/* RED2 172-4 */
-/* [半径][转速] 数组 */ /* 巨匠里我们的场测试的参数 */
+// /* [半径][转速] 数组 */
 // const float radium_speed[LOOP_NUM][2] = {
-//     {2000, 14500 /**/}, {2100, 14450 /**/}, {2200, 14100 /**/},
-//     {2400, 14800 /**/}, {2550, 14100 /**/}, {2700, 14300},
-//     {2850, 14500 /**/}, {3000, 14800 /**/}, {3400, 15800},
-//     {3600, 16200},      {3900, 16400 /**/}, {4200, 17000},
-//     {4500, 17200 /**/}, {4800, 18200},      {5100, 18500 /**/},
-//     {5400, 19500},      {5700, 19800 /**/}, {6000, 20800}};
+//     {2400, 14800}, {2700, 14300 /**/}, {3000, 14800}, {3400, 15800},
+//     {3600, 16200}, {3900, 16400 /**/}, {4200, 17000}, {4500, 17200 /**/},
+//     {4800, 18200}, {5100, 18500 /**/}, {5400, 19500}, {5700, 19800 /**/},
+//     {6000, 20800}};
 
-/**
- * @brief 圆环索引返回函数
- *
- * @param radium 距离目标点的半径
- * @return 圆环在数组中的索引
- */
 uint8_t min_index_return(float radium) {
     float min_abs_radium = my_fabs(radium - radium_speed[0][0]);
     uint8_t min_index = 0;
@@ -71,17 +56,17 @@ uint8_t min_index_return(float radium) {
         }
     }
 
-#if RADIUM_CTRL /* 遥感控制大小环的选择 */
+#if RADIUM_CTRL /* 这个宏打开的时候右手遥感y轴可以控制半径的选择,默认选择后面一环 */
     if (g_basket_radius >= min_abs_radium) {
         if (g_remote_ctrl_data.rs[3] > 5) {
             min_index = min_index;
-        } else if (g_remote_ctrl_data.rs[3] < -5) {
+        } else {
             min_index++;
         }
     } else {
         if (g_remote_ctrl_data.rs[3] > 5) {
             min_index--;
-        } else if (g_remote_ctrl_data.rs[3] < -5) {
+        } else {
             min_index = min_index;
         }
     }
@@ -96,87 +81,35 @@ uint8_t min_index_return(float radium) {
     return min_index;
 }
 
-/**
- * @brief 主控任务
- * @note 该任务用于接收主控队列中的消息,并根据消息类型进行相应的处理
- *
- * @param pvParameters
- */
 void main_ctrl_task(void *pvParameters) {
     UNUSED(pvParameters);
     main_ctrl_queue_t received_message;
     static uint8_t index;
+    static uint8_t point_index = 0;  // 静态变量，记录当前点位索引
     while (1) {
         if (xQueueReceive(main_ctrl_queue, &received_message, portMAX_DELAY) ==
             pdPASS) {
             switch (received_message) {
                 case MAIN_CTRL_RADIUM:
+                    /* 运球回收篮球 */
+                    // dribble_set_ctrl(DRIBBLE_HANDLEOVER_BALL);
                     /* 计算最小半径 */
                     index = min_index_return(g_basket_radius);
                     /* 设置目标半径 */
                     index = chassis_overwrite_pointarray(index);
                     /* 摩擦轮同时准备转动 */
                     shoot_machine_set_ctrl(radium_speed[index][1],
-                                           SHOOT_MACHINE_EVENT_FRIBELT_PRE);
+                                           SHOOT_MACHINE_EVENT_FRIBELT_DIRECT);
                     /* 设置底盘控制任务  */
                     chassis_set_ctrl(CHASSIS_SET_MIN_RADIUM);
+                    break;
+                
+                case MAIN_CTRL_POINT_RUN:                     //修改部分
+                    point_index = (point_index + 1) % 4;
+                    chassis_state.point_index = point_index;  // 直接设置索引
+                    chassis_set_ctrl(CHASSIS_SET_POINT);      // 触发跑点
+                    break;
 
-                    break;
-                case MAIN_CTRL_LEFT_BALL:
-                    /* 设置底盘控制任务  */
-                    chassis_set_ctrl(CHASSIS_SET_MANUAL);
-                    chassis_set_ctrl(CHASSIS_LEFT_AIMING);
-                    // dribble_set_ctrl(DRIBBLE_PUSH_OUT);
-                    shoot_machine_set_ctrl(0.0f, SHOOT_MACHINE_EVENT_DISABLE);
-                    vTaskDelay(500);
-                    /* 清除自瞄表示位防止到点后剧烈转动 */
-                    chassis_set_ctrl(CHASSIS_RESET_AIMING);
-                    // dribble_set_ctrl(DRIBBLE_PUSH_IN);
-                    /* 反转装球 */
-                    shoot_machine_set_ctrl(-2800.0f,
-                                           SHOOT_MACHINE_EVENT_LOAD_BALL);
-                    break;
-                case MAIN_CTRL_RIGHT_BALL:
-                    /* 设置底盘控制任务  */
-                    chassis_set_ctrl(CHASSIS_SET_MANUAL);
-                    chassis_set_ctrl(CHASSIS_RIGHT_AIMING);
-                    // dribble_set_ctrl(DRIBBLE_PUSH_OUT);
-                    shoot_machine_set_ctrl(0.0f, SHOOT_MACHINE_EVENT_DISABLE);
-                    vTaskDelay(500);
-                    /* 清除自瞄表示位防止到点后剧烈转动 */
-                    chassis_set_ctrl(CHASSIS_RESET_AIMING);
-                    vTaskDelay(500);
-                    // dribble_set_ctrl(DRIBBLE_PUSH_IN);
-                    /* 反转装球 */
-                    shoot_machine_set_ctrl(-2800.0f,
-                                           SHOOT_MACHINE_EVENT_LOAD_BALL);
-                    break;
-                case MAIN_CTRL_BIG_LOOP:
-                    index++;
-                    if (index >= (LOOP_NUM - 1)) {
-                        index = (LOOP_NUM - 1);
-                    }
-                    /* 设置目标半径 */
-                    index = chassis_overwrite_pointarray(index);
-                    /* 摩擦轮同时准备转动 */
-                    shoot_machine_set_ctrl(radium_speed[index][1],
-                                           SHOOT_MACHINE_EVENT_FRIBELT_DIRECT);
-                    /* 设置底盘控制任务  */
-                    chassis_set_ctrl(CHASSIS_SET_MIN_RADIUM);
-                    break;
-                case MAIN_CTRL_SMALL_LOOP:
-                    index--;
-                    if ((int8_t)index <= 0) {
-                        index = 0;
-                    }
-                    /* 设置目标半径 */
-                    index = chassis_overwrite_pointarray(index);
-                    /* 摩擦轮同时准备转动 */
-                    shoot_machine_set_ctrl(radium_speed[index][1],
-                                           SHOOT_MACHINE_EVENT_FRIBELT_DIRECT);
-                    /* 设置底盘控制任务  */
-                    chassis_set_ctrl(CHASSIS_SET_MIN_RADIUM);
-                    break;
                 default:
                     break;
             }
@@ -185,14 +118,7 @@ void main_ctrl_task(void *pvParameters) {
     }
 }
 
-/**
- * @brief 设置主控按键函数
- * @note 该函数用于处理遥控器按键事件,并将相应的消息发送到主控队列中
- *
- * @param key
- * @param event
- */
-void set_main_ctrl_key(uint8_t key, remote_key_event_t event) {
+void key_main_ctrl(uint8_t key, remote_key_event_t event) {
     UNUSED(event);
 
     main_ctrl_queue_t send_msg;
@@ -200,17 +126,8 @@ void set_main_ctrl_key(uint8_t key, remote_key_event_t event) {
         case MAIN_CTRL_MIN_RADIUM_KEY:
             send_msg = MAIN_CTRL_RADIUM;
             break;
-        case MAIN_CTRL_RIGHT_POINT_KEY:
-            send_msg = MAIN_CTRL_RIGHT_BALL;
-            break;
-        case MAIN_CTRL_LEFT_POINT_KEY:
-            send_msg = MAIN_CTRL_LEFT_BALL;
-            break;
-        case MAIN_CTRL_SMALL_LOOP_KEY:
-            send_msg = MAIN_CTRL_SMALL_LOOP;
-            break;
-        case MAIN_CTRL_BIG_LOOP_KEY:
-            send_msg = MAIN_CTRL_BIG_LOOP;
+        case MAIN_CTRL_AUTO_POINT_RUN:
+            send_msg = MAIN_CTRL_POINT_RUN;
             break;
         default:
             break;
@@ -224,16 +141,13 @@ void main_ctrl_init(void) {
         return;
     }
 
-    xTaskCreate(main_ctrl_task, "main_ctrl_task", 256, NULL, 4,
+    xTaskCreate(main_ctrl_task, "main_ctrl_task", 512, NULL, 4,
                 &main_ctrl_task_handle);
-    remote_register_key_callback(MAIN_CTRL_MIN_RADIUM_KEY,
-                                 REMOTE_KEY_PRESS_DOWN, set_main_ctrl_key);
-    remote_register_key_callback(MAIN_CTRL_LEFT_POINT_KEY, REMOTE_KEY_PRESS_UP,
-                                 set_main_ctrl_key);
-    remote_register_key_callback(MAIN_CTRL_RIGHT_POINT_KEY, REMOTE_KEY_PRESS_UP,
-                                 set_main_ctrl_key);
-    remote_register_key_callback(MAIN_CTRL_SMALL_LOOP_KEY, REMOTE_KEY_PRESS_UP,
-                                 set_main_ctrl_key);
-    remote_register_key_callback(MAIN_CTRL_BIG_LOOP_KEY, REMOTE_KEY_PRESS_UP,
-                                 set_main_ctrl_key);
+
+    /* 表演时注释掉跑环，仅跑点 */
+    // remote_register_key_callback(MAIN_CTRL_MIN_RADIUM_KEY,
+    //                              REMOTE_KEY_PRESS_DOWN, key_main_ctrl);
+                            
+    remote_register_key_callback(MAIN_CTRL_AUTO_POINT_RUN,
+                                  REMOTE_KEY_PRESS_DOWN, key_main_ctrl);
 }
