@@ -4,9 +4,9 @@
  * @brief 主要控制逻辑,用于给不同模块发布消息,控制总流程
  * @version 0.1
  * @date 2025-04-27
- * 
+ *
  * @copyright Copyright (c) 2025
- * 
+ *
  */
 #include "includes.h"
 #include "remote_ctrl/remote_ctrl.h"
@@ -103,7 +103,7 @@ void main_ctrl_task(void *pvParameters) {
                     /* 设置底盘控制任务  */
                     chassis_set_ctrl(CHASSIS_SET_MIN_RADIUM);
                     break;
-                
+
                 case MAIN_CTRL_POINT_RUN:                     //修改部分
                     point_index = (point_index + 1) % 4;
                     chassis_state.point_index = point_index;  // 直接设置索引
@@ -147,7 +147,7 @@ void main_ctrl_init(void) {
     /* 表演时注释掉跑环，仅跑点 */
     // remote_register_key_callback(MAIN_CTRL_MIN_RADIUM_KEY,
     //                              REMOTE_KEY_PRESS_DOWN, key_main_ctrl);
-                            
+
     remote_register_key_callback(MAIN_CTRL_AUTO_POINT_RUN,
                                   REMOTE_KEY_PRESS_DOWN, key_main_ctrl);
 }
