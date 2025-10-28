@@ -23,7 +23,6 @@ extern "C" {
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
-#include <stdio.h>
 
 /* 投篮赛点位 */
 #define BASKET_OFFSET_X -16.0f
@@ -73,7 +72,6 @@ typedef struct {
 extern nuc_pos_data_t g_nuc_pos_data;
 
 extern TaskHandle_t sub_pub_task_handle;
-extern TaskHandle_t action_position_recv_task_handle;
 extern TaskHandle_t msg_polling_task_handle;
 void sub_pub_task(void *pvParameters);
 void msg_polling_task(void *pvParameters);
@@ -217,16 +215,12 @@ void shoot_machine_set_ctrl(float speed, shoot_machine_event_t event);
  * @{
  */
 typedef enum {
-    DRIBBLE_WHOLE_PROCESS, /* 纯运球流程 */
-    DRIBBLE_PART_PROCESS,  /* 交接球流程 */
-
+    DRIBBLE_WHOLE_PROCESS, /* 全流程 */
     DRIBBLE_OPEN_CLAMP,    /* 张开夹子 */
     DRIBBLE_CLOSE_CLAMP,   /* 关闭夹子 */
     DRIBBLE_HIT_BALL,      /* 单击打球 */
     DRIBBLE_PUSH_OUT,      /* 整个机构推出 */
     DRIBBLE_PUSH_IN,       /* 整个机构缩回 */
-    DRIBBLE_DRAWER_OUT,    /* 接球抽屉伸出 */
-    DRIBBLE_DRAWER_IN,     /* 接球抽屉回缩 */
     DRIBBLE_GET_STATUES,   /* 获得夹子中球的状态 */
 
     DRIBBLE_MOVE_TO_CATCH,   /* 伸出交接装置到运球下 */

@@ -20,11 +20,7 @@ typedef enum {
     GO_PATH_TARGET_ARRIVE,
     GO_PATH_TARGET_POINT_TYPE_ERR,
 
-    GO_PATH_TARGET_ARRIVE_NOT_XY_YAW,   //修改
-    GO_PATH_TARGET_ARRIVE_XY_NOT_YAW,      //修改    
-
-    GO_PATH_RESERVE_STATUS_NUM,
-
+    GO_PATH_RESERVE_STATUS_NUM
 } go_path_arrive_status_t;
 
 /* 点位类型 */
@@ -32,8 +28,6 @@ typedef enum {
     POINT_TYPE_NUC_FLAT = 0,
     POINT_TYPE_DT35,
     POINT_TYPE_TARGET_RADIUM,
-    POINT_TYPE_LINEAR,  // 新增：直线跑点类型
-    POINT_TYPE_X_Y_YAW_SEQUENCE,  // 新增：先x后y最后yaw角的顺序跑点类型
 
     POINT_TYPE_NUM
 } go_path_point_type_t;
@@ -67,8 +61,5 @@ void go_path_pidpoint_init(pid_t *speed_pid, pid_t *angle_pid,
 go_path_arrive_status_t go_path_by_point(float target_x, float target_y,
                                          float target_yaw,
                                          go_path_point_type_t point_type);
-
-static void linear_pid_control(go_path_point_type_t point_type);
-static void x_y_yaw_sequence_control(go_path_point_type_t point_type);
 
 #endif /* __GO_PATH_H */

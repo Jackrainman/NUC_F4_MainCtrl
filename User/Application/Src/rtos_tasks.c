@@ -65,7 +65,7 @@ void start_task(void *pvParameters) {
     /* 创建后台任务 */
     xTaskCreate(sub_pub_task, "sub_pub_task", 256, NULL, 4,
                 &sub_pub_task_handle);
-    
+
     vTaskDelete(start_task_handle);
     taskEXIT_CRITICAL();
 }
@@ -89,8 +89,8 @@ void task1(void *pvParameters) {
 #ifdef configASSERT
 
 /**
- * @brief FreeRTOS assert failed function. 
- * 
+ * @brief FreeRTOS assert failed function.
+ *
  * @param pcFile File name
  * @param ulLine File line
  */
@@ -121,7 +121,7 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
 
 /**
  * @brief This hook function is called when allocation failed.
- * 
+ *
  */
 void vApplicationMallocFailedHook(void) {
     fprintf(stderr, "FreeRTOS malloc failed! \n");
