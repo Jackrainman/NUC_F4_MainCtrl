@@ -486,6 +486,7 @@ void chassis_auto_ctrl_task(void *pvParameters) {
                 /* 发送信号量更新底盘状态 */
                 chassis_set_status(CHASSIS_STATUS_POINT_ARRIVED);
                 chassis_set_manual_ctrl(); /* 切换手控 */
+                chassis_set_halt(1);
             }
         }
         vTaskDelay(1);
