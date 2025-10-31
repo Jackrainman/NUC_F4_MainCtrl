@@ -11,18 +11,18 @@
 #include "pid/pid.h"
 #include "my_math/my_math.h"
 
-/**     
+/**
  *     按键布局
  *     6  7
  *     12 13
  */
-#define DRIBBLE_WHOLE_PROCESS_KEY 12
-#define DRIBBLE_CLAMP_KEY         26
+#define DRIBBLE_WHOLE_PROCESS_KEY 8
+#define DRIBBLE_CLAMP_KEY         2
 #define DRIBBLE_PUSH_KEY          27
-#define DRIBBLE_HANDOVER_KEY      13
-#define DRIBBLE_PART_PROCESS_KEY  14
-#define DRIBBLE_PUSH_IN_KEY       7
-#define DRIBBLE_PUSH_OUT_KEY      6
+#define DRIBBLE_HANDOVER_KEY      9
+#define DRIBBLE_PART_PROCESS_KEY  10
+#define DRIBBLE_PUSH_IN_KEY       3
+#define DRIBBLE_PUSH_OUT_KEY      4
 
 #define HANDOVER_DEBUG            0
 
@@ -41,8 +41,8 @@ void dribble_set_ctrl(dribble_event_t event) {
 }
 
 /**
- * @brief 运球按键回调函数 
- * 
+ * @brief 运球按键回调函数
+ *
  * @param key 按键
  * @param event 按下按键发送运球信号,松开清空发送
  * @return null
@@ -116,7 +116,7 @@ void key_dribble_ball(uint8_t key, remote_key_event_t key_event) {
 
 /**
  * @brief 夹子张开
- * 
+ *
  */
 void clamp_open(void) {
     push_out();
@@ -126,7 +126,7 @@ void clamp_open(void) {
 
 /**
  * @brief 夹子闭合
- * 
+ *
  */
 void clamp_close(void) {
     CYLINDER_CLAMP_OFF();
@@ -134,7 +134,7 @@ void clamp_close(void) {
 
 /**
  * @brief 击打球机构
- * 
+ *
  */
 void hit_ball(void) {
     CYLINDER_TOP_ON();
@@ -144,7 +144,7 @@ void hit_ball(void) {
 
 /**
  * @brief 将气缸推出
- * 
+ *
  */
 void push_out(void) {
     CYLINDER_PUSH_ON();
@@ -152,7 +152,7 @@ void push_out(void) {
 
 /**
  * @brief 将气缸收回
- * 
+ *
  */
 void push_in(void) {
     CYLINDER_PUSH_OFF();
@@ -160,8 +160,8 @@ void push_in(void) {
 }
 
 /**
- * @defgroup handover 
- * @{ 
+ * @defgroup handover
+ * @{
  * **************************************************************************
  */
 TaskHandle_t catch_motor_ctrl_task_handle;
@@ -181,7 +181,7 @@ pid_t catch_motor_angle_pid = {0};     /* dji角度pid */
 
 /**
  * @brief 设置任务状态
- * 
+ *
  * @param status 状态量:
  *  @val  CATCH_STATUS_TO_SHOOT
  *  @val  CATCH_STATUS_TO_CATCH
@@ -192,7 +192,7 @@ void set_catch_motor_statue(catch_status_t status) {
 
 /**
  * @brief catch to shoot
- * 
+ *
  */
 void catch_to_shoot(void) {
     /* 伸出接球装置*/
@@ -214,7 +214,7 @@ void catch_to_shoot(void) {
 
     /**
      * @todo 等待球落下
-     * 
+     *
      */
     push_in(); /* 收回交接机构 */
     set_catch_motor_statue(CATCH_STATUS_TO_SHOOT);
@@ -222,7 +222,7 @@ void catch_to_shoot(void) {
 
 /**
  * @brief catch to shoot
- * 
+ *
  */
 void catch_to_shoot_push_in(void) {
     /* 伸出接球装置*/
@@ -236,8 +236,8 @@ void catch_to_shoot_push_out(void) {
 
 /**
  * @brief 接球装置伸缩任务
- * 
- * @param pvParameters 
+ *
+ * @param pvParameters
  */
 void catch_motor_ctrl_task(void *pvParameters) {
     UNUSED(pvParameters);
@@ -291,7 +291,7 @@ void catch_motor_ctrl_task(void *pvParameters) {
         rpm_out = pid_calc(&catch_motor_speed_pid, target_rpm,
                            catch_motor_handle.speed_rpm);
 
-                           
+
         dji_motor_set_current(can1_selected, DJI_MOTOR_GROUP1, (int16_t)rpm_out,
                               0, 0, 0);
         vTaskDelay(10);
@@ -300,12 +300,12 @@ void catch_motor_ctrl_task(void *pvParameters) {
 
 /**
  * **************************************************************************
- * @} 
+ * @}
  */
 
 /**
  * @brief 运球
- * 
+ *
  */
 void whole_process(void) {
     static int8_t times_flag = 0;
@@ -370,8 +370,8 @@ void whole_process(void) {
 
 /**
  * @brief 控制运球任务
- * 
- * @param pvParameters 
+ *
+ * @param pvParameters
  */
 void dribble_ctrl_task(void *pvParameters) {
     UNUSED(pvParameters);
@@ -455,7 +455,7 @@ void dribble_ctrl_task(void *pvParameters) {
                 /* 将2006收回接球装置 */
                 set_catch_motor_statue(CATCH_STATUS_TO_SHOOT);
                 shoot_machine_set_ctrl(16000.0f, SHOOT_MACHINE_EVENT_FRIBELT_PRE);
-                
+
             } break;
             case DRIBBLE_HANDLEOVER_BALL: {
                 /* 将2006接球装置收回 */
@@ -471,8 +471,8 @@ void dribble_ctrl_task(void *pvParameters) {
 
 /**
  * @brief 运球初始化
- * 
- * @return 
+ *
+ * @return
  */
 void dribble_init(void) {
     cylinder_init();   /* 初始化气缸 */

@@ -18,11 +18,11 @@
 #define POS_NUM              5 /*!< 点位数量 */
 
 /* 按键宏定义 */
-#define CHASSIS_AIMING_KEY   3  /*!< 底盘自瞄开启 */
-#define CHASSIS_SET_HALT_KEY 1  /*!< 底盘是否自锁 */
-#define CHASSIS_WORLD_KEY    2  /*!< 底盘切手控 */
-#define CHASSIS_SET_WORLD    5  /*!<切换世界坐标系*/
-#define CHASSIS_SET_SELF     11 /*!<切换自身坐标系*/
+#define CHASSIS_AIMING_KEY   15  /*!< 底盘自瞄开启 */
+#define CHASSIS_SET_HALT_KEY 14  /*!< 底盘是否自锁 */
+#define CHASSIS_WORLD_KEY    13  /*!< 底盘切手控 */
+#define CHASSIS_SET_WORLD    1  /*!<切换世界坐标系*/
+#define CHASSIS_SET_SELF     7 /*!<切换自身坐标系*/
 
 /* FreeRTOS-句柄 & 函数声明 */
 TaskHandle_t chassis_manual_ctrl_task_handle; /*!< 手动任务句柄 */
@@ -72,7 +72,7 @@ enum {
 /* 固定点位+可变点位函数 */
 pos_node_t pos_array[POS_NUM + EX_NODE_NUM] = {
     [0] = {-0.12f, 0.59f, 0.0f, POINT_TYPE_NUC_FLAT},
-    [1] = {200.11f, 200.0f, 0.0f, POINT_TYPE_NUC_FLAT},
+    [1] = {2620.11f, 2847.0f, 87.8f, POINT_TYPE_NUC_FLAT},
     [2] = {-200.78f, -300.57f, 88.09f, POINT_TYPE_NUC_FLAT},
     [3] = {0, 0, 0, POINT_TYPE_NUC_FLAT}, /*!< 点位信息 */
 
@@ -455,7 +455,7 @@ void chassis_auto_ctrl_task(void *pvParameters) {
     /* go_path中pid点位类型初始化 */
     pid_init(&nuc_flat_speed_pid, 3000, 1000, 0.0f, 50000.0f, POSITION_PID,
              3.0f, 1.0f, 0.0f);
-    pid_init(&nuc_flat_angle_pid, 200, 8, 0.0f, 500.0f, POSITION_PID, 3.2 * 10.0f,
+    pid_init(&nuc_flat_angle_pid, 200, 8, 0.0f, 500.0f, POSITION_PID, 5.4 * 10.0f,  //修改
              0.0f, 2.0 * 10.0f);
     go_path_pidpoint_init(&nuc_flat_speed_pid, &nuc_flat_angle_pid, 20.0, 0.5,
                           POINT_TYPE_NUC_FLAT, LOCATION_TYPE_NUC);
@@ -486,7 +486,6 @@ void chassis_auto_ctrl_task(void *pvParameters) {
                 /* 发送信号量更新底盘状态 */
                 chassis_set_status(CHASSIS_STATUS_POINT_ARRIVED);
                 chassis_set_manual_ctrl(); /* 切换手控 */
-                chassis_set_halt(1);
             }
         }
         vTaskDelay(1);
@@ -554,10 +553,10 @@ void chassis_init(void) {
                                  chassis_remote_key);
     remote_register_key_callback(CHASSIS_SET_HALT_KEY, REMOTE_KEY_PRESS_DOWN,
                                  chassis_remote_key);
-    // remote_register_key_callback(CHASSIS_SET_WORLD, REMOTE_KEY_PRESS_UP,
-    //                              chassis_remote_key);
-    // remote_register_key_callback(CHASSIS_SET_SELF, REMOTE_KEY_PRESS_UP,
-    //                              chassis_remote_key);
+    remote_register_key_callback(CHASSIS_SET_WORLD, REMOTE_KEY_PRESS_UP,
+                                 chassis_remote_key);
+    remote_register_key_callback(CHASSIS_SET_SELF, REMOTE_KEY_PRESS_UP,
+                                 chassis_remote_key);
 
 #if 0 /* 固定点位跑点暂不需要 */
     /*按键按下自动跑点松开自动切回手动任务*/

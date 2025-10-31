@@ -15,7 +15,7 @@
 #define RADIUM_CTRL              0
 
 #define MAIN_CTRL_MIN_RADIUM_KEY 17 /* 自动跑环按键，暂时不用 */
-#define MAIN_CTRL_AUTO_POINT_RUN 4 /* 自动跑点运行 */
+#define MAIN_CTRL_AUTO_POINT_RUN 16 /* 自动跑点运行 */
 
 typedef enum {
     MAIN_CTRL_RADIUM,     /* 自动跑环信号 */

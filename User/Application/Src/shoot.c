@@ -4,9 +4,9 @@
  * @brief 发射控制相关函数
  * @version 2.0
  * @date 2025-05-15
- * 
+ *
  * @copyright Copyright (c) 2025
- * 
+ *
  */
 #include "includes.h"
 #include "remote_ctrl/remote_ctrl.h"
@@ -15,13 +15,13 @@
 #include "logger/logger.h"
 #include "odometry_string/odometry_string.h"
 
-#define SPEED_ADD_KEY      9  /* 速度增加按键 */
-#define SPEED_DEC_KEY      15 /* 速度减小按键 */
-#define SPEED_PRE_KEY      8  /* 预订转速按键 */
-#define ENABLE_KEY         10 /* 发射使能按键 */
-#define DISABLE_KEY        16 /* 发射失能按键 */
+#define SPEED_ADD_KEY      5  /* 速度增加按键 */
+#define SPEED_DEC_KEY      11 /* 速度减小按键 */
+#define SPEED_PRE_KEY      38  /* 预订转速按键 */
+#define ENABLE_KEY         6 /* 发射使能按键 */
+#define DISABLE_KEY        12 /* 发射失能按键 */
 #define SANCTION_KEY       0 /* 制裁按键 */
-#define SMALL_SPEED_KEY    5  /*!<切换自身坐标系*/
+#define SMALL_SPEED_KEY    35  /*!<低速模式按键 */
 
 // #define SPEED_CALCULATE_KEY 16 /* 速度拟合按键 */
 
@@ -42,9 +42,9 @@
 
 /**
  * @brief 速度计算曲线函数
- * 
- * @param radium 
- * @return float 
+ *
+ * @param radium
+ * @return float
  */
 float get_friction_speed(float radium) {
     if (radium < 3125.0f) {
@@ -68,9 +68,9 @@ shoot_sub_t shoot_sub = {0};
 
 /**
  * @brief 摩擦带速度控制
- * 
- * @param key 
- * @param event 
+ *
+ * @param key
+ * @param event
  */
 void fribelt_speed_ctrl(uint8_t key, remote_key_event_t event) {
     UNUSED(event);
@@ -112,9 +112,9 @@ void fribelt_speed_ctrl(uint8_t key, remote_key_event_t event) {
 
 /**
  * @brief 推球控制
- * 
- * @param key 
- * @param event 
+ *
+ * @param key
+ * @param event
  */
 void push_ball_ctrl(uint8_t key, remote_key_event_t event) {
     UNUSED(event);
@@ -164,8 +164,8 @@ void push_ball_ctrl(uint8_t key, remote_key_event_t event) {
 }
 
 /**
- * @brief 初始化按键 
- * 
+ * @brief 初始化按键
+ *
  */
 void shoot_ctrl_init(void) {
     /* 注册遥控器按键 */
@@ -196,7 +196,7 @@ void shoot_ctrl_init(void) {
 }
 /**
  * @brief 摩擦带速度计算
- * 
+ *
  */
 float fribelt_speed_cal(float radius) {
     float erpm;
@@ -218,8 +218,8 @@ void shoot_machine_set_ctrl(float speed, shoot_machine_event_t event) {
 
 /**
  * @brief 发射任务
- * 
- * @param pvParameters 
+ *
+ * @param pvParameters
  */
 void shoot_machine_task(void *pvParameters) {
     UNUSED(pvParameters);
