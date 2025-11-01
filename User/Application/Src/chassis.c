@@ -72,9 +72,9 @@ enum {
 /* 固定点位+可变点位函数 */
 pos_node_t pos_array[POS_NUM + EX_NODE_NUM] = {
     [0] = {-0.12f, 0.59f, 0.0f, POINT_TYPE_NUC_FLAT},
-    [1] = {2620.11f, 2847.0f, 87.8f, POINT_TYPE_NUC_FLAT},
-    [2] = {-200.78f, -300.57f, 88.09f, POINT_TYPE_NUC_FLAT},
-    [3] = {0, 0, 0, POINT_TYPE_NUC_FLAT}, /*!< 点位信息 */
+    [1] = {1999.78f, 1467.57f, 61.49f, POINT_TYPE_NUC_FLAT},
+    [2] = {2620.11f, 2847.0f, 87.8f, POINT_TYPE_NUC_FLAT},
+    [3] = {1815.0f, 4810.4f, 124.2f, POINT_TYPE_NUC_FLAT}, /*!< 点位信息 */
 
     /* 可变点位信息 */
     [POS_NUM +
@@ -455,7 +455,7 @@ void chassis_auto_ctrl_task(void *pvParameters) {
     /* go_path中pid点位类型初始化 */
     pid_init(&nuc_flat_speed_pid, 3000, 1000, 0.0f, 50000.0f, POSITION_PID,
              3.0f, 1.0f, 0.0f);
-    pid_init(&nuc_flat_angle_pid, 200, 8, 0.0f, 500.0f, POSITION_PID, 5.4 * 10.0f,  //修改
+    pid_init(&nuc_flat_angle_pid, 200, 8, 0.0f, 500.0f, POSITION_PID, 9.4 * 10.0f,  //修改
              0.0f, 2.0 * 10.0f);
     go_path_pidpoint_init(&nuc_flat_speed_pid, &nuc_flat_angle_pid, 20.0, 0.5,
                           POINT_TYPE_NUC_FLAT, LOCATION_TYPE_NUC);

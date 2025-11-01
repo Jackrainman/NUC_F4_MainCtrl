@@ -16,15 +16,15 @@
  *     6  7
  *     12 13
  */
-#define DRIBBLE_WHOLE_PROCESS_KEY 8
-#define DRIBBLE_CLAMP_KEY         2
-#define DRIBBLE_PUSH_KEY          27
-#define DRIBBLE_HANDOVER_KEY      9
-#define DRIBBLE_PART_PROCESS_KEY  10
-#define DRIBBLE_PUSH_IN_KEY       3
-#define DRIBBLE_PUSH_OUT_KEY      4
+#define DRIBBLE_PROCESS_KEY            8
+#define DRIBBLE_CLAMP_ON_KEY           2
+#define DRIBBLE_PUSH_KEY               3
+#define DRIBBLE_CLAMP_OFF_KEY          4
+#define DRIBBLE_HANDOVER_KEY           29
+#define DRIBBLE_CLAMP_AND_HIT_KEY      20
+#define DRIBBLE_CLAMP_PUSH_KEY         9
 
-#define HANDOVER_DEBUG            0
+#define HANDOVER_DEBUG                 0
 
 TaskHandle_t dribble_ctrl_task_handle;
 void dribble_ctrl_task(void *pvParameters);
@@ -52,43 +52,43 @@ void key_dribble_ball(uint8_t key, remote_key_event_t key_event) {
     UNUSED(key_event);
     dribble_ctrl_queue_t dribble_ctrl_msg;
     dribble_ctrl_msg.event = DRIBBLE_NO_TASK;
-    static bool push_flag = false;  /* true-机构推出；false-机构回缩 */
-    static bool clamp_flag = false; /* true-夹子张开；false-夹子闭合 */
+    static bool push_flag = false;       /* true-机构推出；false-机构回缩 */
+    static bool clamp_flag = false;      /* true-夹子张开；false-夹子闭合 */
+    static bool clamp_push_flag = false; /* true-夹子推出；false-夹子收回 */
 
     switch (key) {
-        case DRIBBLE_WHOLE_PROCESS_KEY:
+        case DRIBBLE_PROCESS_KEY:
             /* 纯运球流程 */
-            dribble_ctrl_msg.event = DRIBBLE_WHOLE_PROCESS;
+            dribble_ctrl_msg.event = DRIBBLE_PROCESS;
             break;
-        case DRIBBLE_PART_PROCESS_KEY:
+        case DRIBBLE_CLAMP_AND_HIT_KEY:
             /* 交接球流程 */
-            dribble_ctrl_msg.event = DRIBBLE_PART_PROCESS;
+            dribble_ctrl_msg.event = DRIBBLE_CLAMP_AND_HIT;
             break;
-        case DRIBBLE_CLAMP_KEY:
-            /* 夹子张开-闭合 */
-            if (clamp_flag) {
-                dribble_ctrl_msg.event = DRIBBLE_CLOSE_CLAMP;
-                clamp_flag = false;
-            } else {
-                dribble_ctrl_msg.event = DRIBBLE_OPEN_CLAMP;
-                clamp_flag = true;
-            }
+        case DRIBBLE_CLAMP_ON_KEY:
+             dribble_ctrl_msg.event = DRIBBLE_OPEN_CLAMP;
+             break;
+        case DRIBBLE_CLAMP_OFF_KEY:
+            dribble_ctrl_msg.event = DRIBBLE_CLOSE_CLAMP;
             break;
         case DRIBBLE_PUSH_KEY:
-            /* 推出-收回 */
+            /* 抽屉推出-收回 */
             if (push_flag) {
-                dribble_ctrl_msg.event = DRIBBLE_PUSH_IN;
+                dribble_ctrl_msg.event = DRIBBLE_MOVE_TO_SHOOT;
                 push_flag = false;
             } else {
-                dribble_ctrl_msg.event = DRIBBLE_PUSH_OUT;
+                dribble_ctrl_msg.event = DRIBBLE_MOVE_TO_CATCH;
                 push_flag = true;
             }
             break;
-        case DRIBBLE_PUSH_IN_KEY:
-            dribble_ctrl_msg.event = DRIBBLE_MOVE_TO_SHOOT;
-            break;
-        case DRIBBLE_PUSH_OUT_KEY:
-            dribble_ctrl_msg.event = DRIBBLE_MOVE_TO_CATCH;
+        case DRIBBLE_CLAMP_PUSH_KEY:
+            if (clamp_push_flag) {
+                dribble_ctrl_msg.event = DRIBBLE_PUSH_IN;
+                clamp_push_flag = false;
+            } else {
+                dribble_ctrl_msg.event = DRIBBLE_PUSH_OUT;
+                clamp_push_flag = true;
+            }
             break;
         case DRIBBLE_HANDOVER_KEY: {
 #if HANDOVER_DEBUG
@@ -119,8 +119,6 @@ void key_dribble_ball(uint8_t key, remote_key_event_t key_event) {
  *
  */
 void clamp_open(void) {
-    push_out();
-    vTaskDelay(500);
     CYLINDER_CLAMP_ON();
 }
 
@@ -156,7 +154,6 @@ void push_out(void) {
  */
 void push_in(void) {
     CYLINDER_PUSH_OFF();
-    clamp_close();
 }
 
 /**
@@ -398,7 +395,7 @@ void dribble_ctrl_task(void *pvParameters) {
         }
 
         switch (dribble_ctrl.event) {
-            case DRIBBLE_WHOLE_PROCESS: {
+            case DRIBBLE_PROCESS: {
                 /* 全流程 */
                 whole_process();
                 if (NPN_SWITCH() == NPN_SWITCH_TOUCHED) {
@@ -411,13 +408,13 @@ void dribble_ctrl_task(void *pvParameters) {
                 dribble_status.timestap = HAL_GetTick();
                 xQueueSend(dribble_status_queue, &dribble_status, 1);
             } break;
-            case DRIBBLE_PART_PROCESS: {
+            case DRIBBLE_CLAMP_AND_HIT: {
                 /* 交接球流程 */
                 catch_to_shoot();
                 shoot_machine_set_ctrl(16000.0f, SHOOT_MACHINE_EVENT_FRIBELT_PRE);
             } break;
             case DRIBBLE_OPEN_CLAMP: {
-                /* 夹子关闭 */
+                /* 夹子开启 */
                 clamp_open();
             } break;
             case DRIBBLE_CLOSE_CLAMP: {
@@ -428,13 +425,21 @@ void dribble_ctrl_task(void *pvParameters) {
                 /* 击打球 */
                 hit_ball();
             } break;
+            case DRIBBLE_PUSH_IN: {
+                /* 上层机构缩回 */
+                push_in();
+            } break;
             case DRIBBLE_PUSH_OUT: {
-                /* 伸出 */
+                /* 上层机构推出 */
                 push_out();
             } break;
-            case DRIBBLE_PUSH_IN: {
-                /* 收回 */
-                push_in();
+            case DRIBBLE_CLAMP_PUSH_IN: {
+                /* 夹子收回 */
+                CYLINDER_CLAMP_OFF();
+            } break;
+            case DRIBBLE_CLAMP_PUSH_OUT: {
+                /* 夹子推出 */
+                CYLINDER_CLAMP_ON();
             } break;
             case DRIBBLE_GET_STATUES: {
                 if (NPN_SWITCH() == NPN_SWITCH_TOUCHED) {
@@ -479,27 +484,25 @@ void dribble_init(void) {
     npn_switch_init(); /* 初始化npn开关 */
 
     /* 设置上电运球初始状态 */
-    push_in(); /* 函数内有对于夹子状态的保护 */
-               // clamp_open(); /* 夹子默认上电张开:方便20s中放球 */
-    clamp_close();
+    clamp_close();  /* 对于夹子状态的保护 */
+    push_in();      /* 上层机构缩回 */
+
     set_catch_motor_statue(CATCH_STATUS_TO_SHOOT); /* 默认状态下抽屉回收 */
 
     /* 运球按键注册 */
-    remote_register_key_callback(DRIBBLE_WHOLE_PROCESS_KEY,
+    remote_register_key_callback(DRIBBLE_PROCESS_KEY,
                                  REMOTE_KEY_PRESS_DOWN, key_dribble_ball);
-    remote_register_key_callback(DRIBBLE_PART_PROCESS_KEY, REMOTE_KEY_PRESS_DOWN,
+    remote_register_key_callback(DRIBBLE_CLAMP_AND_HIT_KEY, REMOTE_KEY_PRESS_DOWN,
                                  key_dribble_ball);
-    remote_register_key_callback(DRIBBLE_CLAMP_KEY, REMOTE_KEY_PRESS_DOWN,
+    remote_register_key_callback(DRIBBLE_CLAMP_ON_KEY, REMOTE_KEY_PRESS_DOWN,
                                  key_dribble_ball);
-    // remote_register_key_callback(DRIBBLE_CLAMP_KEY, REMOTE_KEY_PRESS_UP,
-    //                              key_dribble_ball);
+    remote_register_key_callback(DRIBBLE_CLAMP_OFF_KEY, REMOTE_KEY_PRESS_DOWN,
+                                 key_dribble_ball);
     remote_register_key_callback(DRIBBLE_PUSH_KEY, REMOTE_KEY_PRESS_DOWN,
                                  key_dribble_ball);
     remote_register_key_callback(DRIBBLE_HANDOVER_KEY, REMOTE_KEY_PRESS_DOWN,
                                  key_dribble_ball);
-    remote_register_key_callback(DRIBBLE_PUSH_IN_KEY, REMOTE_KEY_PRESS_DOWN,
-                                 key_dribble_ball);
-    remote_register_key_callback(DRIBBLE_PUSH_OUT_KEY, REMOTE_KEY_PRESS_DOWN,
+    remote_register_key_callback(DRIBBLE_CLAMP_PUSH_KEY, REMOTE_KEY_PRESS_DOWN,
                                  key_dribble_ball);
 
     /* 创建运球任务 */

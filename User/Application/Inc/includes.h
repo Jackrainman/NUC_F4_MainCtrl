@@ -217,16 +217,16 @@ void shoot_machine_set_ctrl(float speed, shoot_machine_event_t event);
  * @{
  */
 typedef enum {
-    DRIBBLE_WHOLE_PROCESS, /* 纯运球流程 */
-    DRIBBLE_PART_PROCESS,  /* 交接球流程 */
+    DRIBBLE_PROCESS,       /* 纯运球流程 */
+    DRIBBLE_CLAMP_AND_HIT,  /* 交接球流程 */
 
     DRIBBLE_OPEN_CLAMP,    /* 张开夹子 */
     DRIBBLE_CLOSE_CLAMP,   /* 关闭夹子 */
     DRIBBLE_HIT_BALL,      /* 单击打球 */
-    DRIBBLE_PUSH_OUT,      /* 整个机构推出 */
-    DRIBBLE_PUSH_IN,       /* 整个机构缩回 */
-    DRIBBLE_DRAWER_OUT,    /* 接球抽屉伸出 */
-    DRIBBLE_DRAWER_IN,     /* 接球抽屉回缩 */
+    DRIBBLE_PUSH_OUT,      /* 接球抽屉推出 */
+    DRIBBLE_PUSH_IN,       /* 接球抽屉缩回 */
+    DRIBBLE_CLAMP_PUSH_OUT, /* 夹子推出 */
+    DRIBBLE_CLAMP_PUSH_IN,  /* 夹子收回 */
     DRIBBLE_GET_STATUES,   /* 获得夹子中球的状态 */
 
     DRIBBLE_MOVE_TO_CATCH,   /* 伸出交接装置到运球下 */
